@@ -1,0 +1,761 @@
+
+# Notes
+
+# Libraries
+link options
+link ximage
+link mylib
+
+# Preprocessor directives
+$define Number 28
+$define Width 30
+
+# Include contents of file
+$include "procedures.icn"
+
+# Global declaration
+global gVal, words, lines, writer
+
+# Record definition
+record planet(name,size,color)
+
+# Make procedure invocable
+invocable "loudF"
+
+procedure main(arguments)
+
+  # Local variables
+  local m, str, index, i, n, a, b, x, y, j, text, vowel, sent, p, s, ld, chset, lst,
+        clist, sblst, se, ta, loop, cp, l1, l2, z, line1, line2, line3, arrs, lPro,
+        val, co1, co2, c1, c2, limit, lA, lB, lC, lD, emL, lE, lF, f1, f2, f, rv,
+        icnFiles, newName, cmd, txtFiles, t, p1, p2, p3, planets, fns, newF, wide,
+        opts, strvar
+
+  # Assignments
+  m := "matrix" ; str := "abcmatrixdefmatrixzzzmatrix"
+
+  # Find substring index
+  if index := find(m,str) then
+    write("Word index: ",index)
+
+  # Find all indices
+  writes("Indices: ") ; showGen(find(m,str)) ; write()
+
+  # Find substring at index 22
+  if i := find(m,str) = 22 then write(i * 2) else write(0)
+
+  # String scanning
+  str ? {
+
+    write("Position before: ",&pos)
+
+    # Write up to substring
+    write(tab(find("rix")))
+
+    write("After: ",&pos)
+
+  }
+
+  # Find substring at current position
+  write("Position after substring: ",match("ami","aminoacids"))
+
+  # Function call
+  example("Night")
+
+  # Loop
+  i := 1
+  while i < 5 do {
+    writes(i," ")
+    i +:= 1
+  }
+  write()
+
+  # Integer sequence
+  every writes(4 to 1 by -1," ")
+  write()
+
+  # Use value from preprocessor directive
+  write("Number: ",Number)
+
+  # Alternation
+  n := 5
+  if n = (2|3|4|5) then write("N: ",n)
+
+  # Display numbers
+  writes("Numbers: ")
+  every writes((1 to 3) | (3 to 1 by -1)," ")
+  write()
+
+  # Call function with various parameters
+  every writes(2|3|4," ") ; write()
+
+  # Find substrings at the same positions
+  if i := find("ab","cabcab") = find("cd","aaabcd") then write(i)
+
+  # Conjunction
+  a := 4 ; b := 8
+  if 4 = a & b = 8 then write("Division: ",b / a)
+
+  # Another type of loop
+  i := 1
+  until i = 5 do {
+    writes(i," ")
+    i +:= 1
+  }
+  write()
+
+  # Negation
+  while not(9 = i) do {
+    writes(i," ")
+    i +:= 1
+  }
+  write()
+
+  # Endless loop and break
+  i := 1
+  repeat {
+    writes(i," ")
+    i +:= 2
+    if 8 < i then break
+  }
+  write()
+
+  # Skip loop iteration
+  every i := 1 to 5 do {
+    if 2 = i then next
+    writes(i," ")
+  }
+  write()
+
+  # Value from procedure
+  write("Multiplication: ",mul4(2,8))
+
+  # Failure
+  if i := maybe(4) then write(i)
+
+  # Negative value
+  i = 5 ; write(-i)
+
+  # Number of milliseconds since beginning of execution
+  write("Milliseconds: ",&time)
+
+  # Select expression
+  i := 15
+  case i of {
+    2 : write("Two")
+    10 | 15 : write("Ten/Fifteen")
+    default : write("Default")
+  }
+
+  # Number between
+  i := 6
+  if 2 < i < 8 then write("Between: ",i)
+
+  # Both variables have value 1
+  x := y := 1
+  write("X = Y = ",x," = ",y)
+
+  # Assign if i is greater than j
+  i := 8 ; j := 3
+  i >:= j
+  write("J: ",j)
+
+  # Swap values
+  a := 2 ; b := 3
+  a :=: b
+  write("A B = ",a," ",b)
+
+  # Generate variables
+  every (a|b) := 1
+  writes("Ones: ")
+  every writes(a|b," ")
+  write()
+
+  # Get variable from expression
+  if a = 1 then a := 6
+  write("A: ",a)
+
+  # Extra arguments are evaluated and discarded
+  write(mul4(5,6,extra(3),extra(4)))
+
+  # Generator procedure
+  writes("Suspend: ")
+  showGen(genVals(5,8)) ; write()
+
+  # Move pointer
+  writes("Move: ")
+  "taxb" ? while move(1) do writes(move(1))
+  write()
+
+  # Right to left
+  "sey" ? {
+    tab(0)
+    while writes(move(-1))
+    write()
+  }
+
+  # Check position
+  text := "Position"
+  text ? {
+    every 1 to 2 do move(1)
+    if pos(3) then write(&pos)
+  }
+
+  # Text after first comma
+  "one,two,three" ? if tab(find(",") + 1) then write(tab(0))
+
+  # Find letters
+  "ooiieeaauu" ? if tab(1 + find("a"|"o"|"i")) then write(tab(0))
+
+  # Display vowel positions
+  vowel := 'aeiou'
+  writes("Positions: ")
+  every "sentence" ? writes(upto(vowel)," ")
+  write()
+
+  # Display text between blanks
+  "abc def ghi" ? {
+    while writes(tab(upto(' '))) do tab(many(' '))
+    write(tab(0))
+  }
+
+  # Position after match
+  "salt pepper" ? write(match("salt"))
+
+  # Tab and match
+  writes("Purple: ")
+  "purplered" ? if ="purple" then write(tab(0))
+
+  # Match character
+  writes("Character: ")
+  "welcome" ? write(tab(any('czw')))
+
+  # Balanced character positions
+  writes("Balance: ")
+  every "(4*(5*2))*3*(5+3)*8" ? writes(bal('*')," ")
+  write()
+
+  # Nested scanning
+  writes("Nested: ")
+  "Sun Moon" ?
+    while tab(upto(&letters)) do
+      tab(many(&letters)) ? writes(move(1)," ")
+  write()
+
+  # Change position and subject
+  "five" ? {
+    &subject := "seven" ; &pos := 3
+    write("Subject and position: ",&subject," ",&pos)
+  }
+
+  # Augmented scanning
+  str := "static local"
+  str ?:= { tab(many(&letters)) ; tab(upto(&letters)) ; tab(0) }
+  write(str)
+
+  # String continuation
+  sent := "Sent_
+    ence"
+  write(sent)
+
+  # Escape sequence
+  write("Say \"Hello World\"")
+
+  # Integer character and character code
+  write("Code: ",char(66)," ",ord("B"))
+
+  # String length
+  write("Word: ",*"Word")
+
+  # String comparison
+  if "ab" == "ab" then write("Lexically Equal")
+
+  # Concatenation
+  str := "Con" || "catenation"
+  write(str)
+
+  # String position
+  p := 10 ; s := "+"
+  write("Right: ")
+  every write(right("abc"|"defgh",p,s))
+  write(right("night",3))
+  write(right("star",p,"*!"))
+  write("Left: ")
+  write(left("light",p,"*"))
+  write("Center: ")
+  write(center("mi",p,"#&"))
+
+  # Replace blanks with tabs
+  write(entab("aaa   bbb   ccc",7))
+
+  # Replace tabs with blanks
+  write(detab("aaa\tbbb\tccc",7))
+
+  # Replicate and reverse string
+  write("Replicate: ",repl("*",20))
+  write("Reverse: ",reverse("roloc"))
+
+  # Replace characters
+  write("Map: ",map("aabcaabcaabca","abc","^$%"))
+  str := "aaabbbaaabbbcccaaa"
+  write("Rightmost character: ",map(str,"abcb","***!"))
+
+  # Trim string
+  write("Trim: ",trim("  Red  "))
+
+  # Substrings
+  str := "Daphne"
+  write("Substrings: ",str[2:5]," ",str[1:*str]," ",str[-1:0]," ",str[5:2])
+  write("Offset: ",str[1+:3]," ",str[4-:3])
+  write("Last: ",str[-1])
+
+  # String modification
+  s := str
+  s[2] := "ee"
+  write("Modification: ",s)
+
+  # Random character
+  write("Random: ",?str)
+
+  # Replace random character
+  ?s := "x" ; write("Replacement: ",s)
+
+  # Generate characters
+  writes("Generate: ")
+  every writes(!s) ; write()
+
+  # Union
+  ld := &letters ++ &digits
+  writes("Union: ") ; showGen(ld) ; write()
+
+  # Analysis range
+  write("A E: ",upto('ae',"abcdea",2,7))
+
+  # Conversion
+  chset := '' ; chset ++:= "cacccacaca" ; write("Set: ",chset)
+
+  # Numeric literals
+  write("Six: ",2r110,"\n","Twelve: ",16rc)
+
+  # Numerical comparison
+  if 1 = 1 then write("One")
+
+  # Trigonometric function
+  write("Cos 60: ",cos(dtor(60)))
+
+  # Logarithm
+  write("Log: ",log(4096,4))
+
+  # Constants
+  write("Constants: ",&e,", ",&phi,", ",&pi)
+
+  # Seed and random number
+  &random := 5
+  write("One or Two: ",?2)
+
+  # Bitwise operations
+  write("Bit: ",iand(7,2)," ",ior(6,1))
+  write("Complement: ",icom(5))
+  write("Shift: ",ishift(2,4)," ",ishift(128,-3))
+
+  # Records
+  m := planet("Mars",10,"red")
+  writes("Planet: ") ; showList(m)
+  write("Fields: ",m.name," ",m["size"]," ",m[3])
+
+  # Lists
+  lst := [5,6,7]
+  writes("List: ") ; push(lst,4) ; put(lst,8) ; showList(lst)
+  writes("Pull: ") ; pull(lst) ; showList(lst)
+  writes("Get: ") ; get(lst) ; showList(lst)
+  writes("Pop: ") ; pop(lst) ; showList(lst)
+  lst := list(20,0) ; writes("Zeros: ") ; showList(lst)
+  write("List size: ",*lst)
+  every !lst := 3 ; writes("Update: ") ; showList(lst)
+  &random := 55 ; ?lst := 0 ; writes("Random zero: ") ; showList(lst)
+  writes("List concatenation: ") ; clist := [7,6,5] ||| [3,3,3] ; showList(clist)
+  writes("Sublist: ") ; sblst := [22,55,11,44,66,1][2:5] ; showList(sblst)
+  lst := [1] ; writes("Push: ") ; push(lst,4,5,6) ; showList(lst)
+
+  # Sets
+  se := set([1,2,1,3,1,2,3,3]) ; writes("Set: ") ; showList(se)
+  insert(se,4) ; if member(se,4) then write("Member")
+  delete(se,1) ; if not(member(se,1)) then write("Delete")
+
+  # Tables
+  ta := table(1) ; ta["one"] := 15 ; ta["two"] := 30
+  write("Table: ",ta["index"]," ",ta["one"]," ",ta["two"])
+  writes("Keys: ") ; showGen(key(ta)) ; write()
+  insert(ta,"three",55) ; write("Insert: ",ta["three"])
+
+  # Structural loop
+  loop := ["Cyclop"] ; push(loop,loop)
+  write(loop[1,1,1,1,1,1,1,1,1,2])
+
+  # Pointer
+  lst := list(3,0) ; cp := lst ; lst[2] := "Pointer" ; write(cp[2])
+
+  # Generator
+  l1 := [1,2,3] ; l2 := [4,5,6]
+  writes("Product: ")
+  every writes(1 to 3,1 to 3," ") ; write()
+
+  # Data backtracking
+  writes("Data: ")
+  "mi.rror," ? (tab(upto(',') + 1) & write(move(1))) | write(tab(upto('.')))
+
+  # Reversible assignment
+  i := 3
+  i <- 1 & i > 2
+  write("I: ",i)
+
+  # Exchange
+  z := 1
+  z <-> i & z < i
+  write("Exchange: ",z)
+
+  # Mutual evaluation (&)
+  line1 := "xxx yyy" ; line2 := "zzzzz mmmmm" ; line3 := "g r"
+  i := (upto(' ', line1), upto(' ', line2))
+  write("Mutual: ",i)
+
+  # Return value of first expression
+  i := 1(upto(' ', line1), upto(' ', line2), upto(' ', line3))
+  write("First: ",i)
+
+  # Limit generation
+  writes("Limit: ")
+  every writes(seq()," ") \ 5
+  write()
+
+  # Prevent data backtracking
+  writes("Prevention: ")
+  every writes(prevent()," ")
+  write()
+
+  # Repeated alternation
+  writes("Repeat: ")
+  every writes(|1 to 2," ") \ 10
+  write()
+
+  # Expression grouping
+  write("Group: ",(-4)(4,"Target",6,7,8))
+
+  # Use procedure with local variable
+  locV()
+
+  # Variable arguments
+  varArgs(1,2,3,4)
+
+  # Global identifier
+  gVal := 72
+  write("Global: ",gVal)
+
+  # Call procedure with list of arguments
+  arrs := [1,2,3] ; argList ! arrs
+
+  # Implicit failure
+  if not(implicit()) then write("Implicit")
+
+  # Resume
+  every write("Do: ",doSuspend())
+
+  # List of procedures
+  lPro := [find,write]
+  lPro[2]("Write")
+
+  # Pass procedure
+  write("Pass: ",passP(add1,1))
+
+  # Value is not dereferenced
+  lst := [5,6,7]
+  deref(lst) := 66
+  writes("Dereference: ")
+  showList(lst)
+
+  # Explicit dereference
+  write("Explicit: ",.lst[3])
+
+  # Order of dereference
+  val := 5 ; write("Order: ",val," ", val := 1)
+  val := 6 ; write("Immediate: ",.val," ", val := 3)
+
+  # Null value
+  write("Null: ",retNull())
+
+  # Create co-expressions
+  co1 := create 1 to 5
+  co2 := create 6 to 10
+
+  # Activate co-expressions
+  write("Co-Expression:")
+  every 1 to 5 do write(@co1," ",@co2)
+
+  # Refresh co-expressions
+  co1 := ^co1 ; co2 := ^co2
+  writes("Refresh: ") ; showGen(|@co1) ; write()
+
+  # Number of produced values
+  writes("Cosize: ",*co2," ") ; every 1 to 2 do @co2 ; write(*co2)
+
+  # Environments of co-expressions
+  i := -2 ; c1 := create |(i *:= 2)
+  i := -8 ; c2 := create |(i *:= 2)
+  writes("Environment: ")
+  every 1 to 5 do writes(@c1," ") ; writes("| ")
+  every 1 to 5 do writes(@c2," ") ; write()
+  write("Original: ",i)
+
+  # Pass co-expressions
+  limit := 20
+  writes("Parallel: ") ; showGen(parallel(create !&lcase, create !&ucase) \ limit) ; write()
+  writes("Paralist: ") ; showGen(paraList{!&lcase,!&ucase,seq()} \ limit) ; write()
+  write("Reduce: ",reduce{"*",2 to 5})
+
+  # Image sequences
+  write("Images: ",sequIm{1 to 5}," ",sequIm{seq(),5})
+
+  # Transmission
+  words := create word()
+  lines := create reader()
+  writer := create output()
+
+  # Run co-expression with output procedure
+  #@writer
+
+  # Display value type
+  write("Type: ",type("real"))
+
+  # Test null
+  i := 1 ; \i := 2 ; write("Exno: ",i)
+  i := &null ; /i := 3 ; write("Exnu: ",i)
+
+  # Identical
+  lA := list(2,0); lB := list(2,0) ; lC := lB
+  if lA ~=== lB & lB === lC then write("Identical")
+
+  # Copy
+  lD := copy(lA) ; if lA ~=== lD then write("Copy")
+  emL := [] ; lE := [emL] ; lF := copy(lE)
+  if lE[1] === lF[1] then write("Inside")
+
+  write(repl("-",Width))
+
+  f1 := "file1.txt" ; f2 := "file2.txt"
+
+  # Read file
+  if f := open(f1) then {
+    while write(read(f))
+    close(f)
+  } else {
+    stop("cannot open ",f1)
+  }
+
+  write(repl("-",Width))
+
+  # Write to file
+  if f := open(f2,"w") then {
+    write(f,"frigid hot autumn\n",
+            "a colored, keen pencil\n",
+            "prowls at the lion")
+    close(f)
+  }
+
+  # Verify file
+  if f := open(f2) then {
+    while write(read(f))
+    close(f)
+  }
+
+  write(repl("-",Width))
+
+  # Return last argument
+  rv := writes("Produce: ",69) ; write(" ",rv)
+
+  # Pipe
+  icnFiles := open("ls *.icn", "p")
+  writes("Files: ")
+  while writes(read(icnFiles)," ") ; write()
+  close(icnFiles)
+
+  # Random file access
+  f := open(f1)
+  seek(f,16) ; write("Seek: ",where(f))
+  write(repl("-",Width))
+  while write(read(f)) ; write(repl("-",Width)) ; write("Where: ",where(f))
+  close(f)
+
+  # Rename file
+  newName := "lion.txt" ; cmd := "ls *.txt"
+  rename(f2,newName)
+
+  # Display text files
+  txtFiles := open(cmd, "p")
+  writes("Text: ") ; while writes(read(txtFiles)," ") ; write()
+  close(txtFiles)
+
+  # Restore name
+  rename(newName,f2)
+
+  # Confirm change
+  txtFiles := open(cmd, "p")
+  writes("Now: ") ; while writes(read(txtFiles)," ") ; write()
+  close(txtFiles)
+
+  # Sort table by keys(1/3) or values(2/4)
+  t := table() ; t["one"] := 5 ; t["two"] := 2 ; t["three"] := 19
+  writes("Sorted: ") ; every writes(!!sort(t,2)," ") ; write()
+
+  # Sort records by field
+  p1 := planet("P1",15,"green")
+  p2 := planet("P2",2,"orange")
+  p3 := planet("P3",9,"purple")
+  planets := [p1,p2,p3]
+  writes("Sizes: ") ; every writes((!sortf(planets,2)).size," ") ; write()
+
+  # Sort various values
+  lst := [[],&letters,5.15,6] ; lst := sort(lst)
+  writes("Types: ") ; every writes(type(!lst)," ") ; write()
+  fns := [write,sort] ; fns := sort(fns) ; fns[2]("Last")
+  writes("Recs: ") ; every writes(!sort(p3)," ") ; write()
+
+  # Produce function
+  proc("write")("Proc")
+  write("Fsize: ",proc("*",1)([1,9,2]))
+  write("Fmul: ",proc("*",2)(8,9))
+  newF := proc("-",2) ; write("NewF: ",newF(12,4))
+  lst := [2,3,7] ; write("ProL: ",proc("[]",2)(lst,3))
+
+  # Number of arguments
+  write("Args: ",args(write)," ",args(output)," ",args(args))
+
+  # String invocation
+  "write"("StFun") ; write("StInv: ","^"(3,3)) ; write("StMin: ","-"(5) * 2)
+
+  # Call invocable procedure
+  "loudF"()
+
+  # Number of garbage collections (total, static, string, block)
+  writes("Cols: ") ; every writes(&collections," ") ; write()
+
+  # Size of regions (static, string, block)
+  writes("Regs: ") ; every writes(&regions," ") ; write()
+
+  # Amount of space (static, string, block)
+  writes("Space: ") ; every writes(&storage," ") ; write()
+
+  # Allocated space (total, static, string, block)
+  writes("Allocate: ") ; every writes(&allocated," ") ; write()
+
+  # Force garbage collection (region 2, 5 bytes)
+  # Anonymous collection without arguments
+  if collect(2,5) then {
+    writes("AfCols: ") ; every writes(&collections," ") ; write()
+    writes("AfSpace: ") ; every writes(&storage," ") ; write()
+  }
+
+  # Execute command
+  wide := Width*2
+  write(repl("-",wide),"\nCommand: ") ; system("ls -l *.icn")
+  write(repl("-",wide))
+
+  # Change directory
+  # chdir("..")
+
+  # Display environment variable
+  write("EnVar: ",getenv("HOME"),"\n",repl("-",wide))
+
+  # Date and clock
+  write("Date: ",&date," | ",&dateline,"\nClock: ",&clock)
+
+  # Wait 5 milliseconds
+  delay(5)
+
+  # Show host
+  write("Host: ",&host)
+
+  # Icon Version
+  write(&version)
+
+  # Exit with code
+  # exit(1)
+
+  # Display message and exit with error code
+  # stop("Stop")
+
+  # Number of command line arguments
+  # Arguments follow -x
+  write("NArgs: ",*arguments)
+
+  # Read options (string s, real b, integer p, optional t)
+  # For example '-s opstr -b 12.5 -p 6 -t'
+  # Multi-character options are specified with '-'
+  opts := options(arguments,"s:b.p+t")
+  write("SBP: ",opts["s"]," ",opts["b"]," ",opts["p"]," ",opts["t"])
+
+  # Display structure image
+  write(repl("-",Width))
+  write("Image: ") ; lst := [1,2,3] ; write(ximage(lst))
+  write(repl("-",Width))
+
+  # Write structure to standard error output
+  xdump("StLst:", lst) ; write(repl("-",Width))
+
+  # Use library procedure
+  libProc()
+
+  # Treat 2 errors as failures
+  &error := 2 ; every (1 to 2) / 0
+
+  # Display and clear error data
+  write("ErrD: ",&errortext," | ",&errornumber) ; errorclear()
+
+  # Force run-time error
+  # runerr(201,"ofval")
+
+  # String image
+  lst := [2,3,8,1]
+  write("StrIm: ",image(lst)," | ",image(main)," | ",image(trim), " | ",image(p1))
+
+  # Serial number
+  write("Serial: ",serial(lst))
+
+  # Current line file and program
+  write("FLP: ",&line," ",&file," ",&progname)
+
+  # Indefinite tracing
+  # &trace := -1
+
+  # Procedure call level
+  write("Level: ",&level)
+
+  # Display variable values
+  # display()
+
+  # Enable post-mortem dump
+  # &dump := 1
+
+  # Show variable name
+  write("VName: ",name(main)," ",name(lst[2]))
+
+  # Produce variable from string
+  variable("strvar") := "vtext"
+  write("StrVar: ",strvar)
+
+  # Find word intersections
+  cross("lottery","boat")
+
+  # Eight queens
+  write("Q: ",queen(1), queen(2), queen(3), queen(4),
+              queen(5), queen(6), queen(7), queen(8))
+
+  # Generate strings from set of characters
+  writes("Star:") ; every writes(star("abc")," ") \ 15 ; write()
+
+  # Fibonacci sequence
+  writes("FibSQ: ") ; every writes(fibseq(1,1)," ") \ 15 ; write()
+
+  write("Exit")
+
+end
+

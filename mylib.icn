@@ -1,0 +1,6 @@
+
+# Library module
+
+procedure libProc()
+  write("LibProc")
+end

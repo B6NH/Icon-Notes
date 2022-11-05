@@ -1,0 +1,280 @@
+
+# Procedures
+
+# Procedure definition
+procedure example(s)
+  write("Procedure with parameter : \"",s,"\"")
+end
+
+# Procedure that returns value
+procedure mul4(i1,i2)
+  return i1 * i2 + 4
+end
+
+# Procedure that can fail
+procedure maybe(i)
+  if i > 5 then
+    return i
+  else {
+    write("Fail")
+    fail
+  }
+end
+
+procedure extra(n)
+
+  # Static variable
+  static i
+
+  # Initialize variable
+  initial i := 1
+
+  write("Extra ",i," with argument ",n) ; i +:= 1
+
+  return 2
+
+end
+
+procedure locV()
+
+  # Local variables
+  local a, b
+
+  a := 5 ; b := 10
+  write("Local: ",a," ",b)
+
+end
+
+# Procedure with variable number of arguments
+procedure varArgs(a,rest[])
+  writes("Variable: ",a," and ")
+  every writes(!rest," ") ; write()
+end
+
+procedure argList(a,b,c)
+  write("Invocation: ",a," ",b," ",c)
+end
+
+procedure implicit()
+  # Failure
+end
+
+procedure doSuspend()
+  local i
+  suspend i := 1 to 2 do write("Resume: ",i)
+end
+
+procedure passP(p,i)
+  return p(i)
+end
+
+procedure add1(i)
+  return i + 1
+end
+
+procedure deref(l)
+  return l[2]
+end
+
+# Procedure returns null value
+procedure retNull()
+  return
+end
+
+procedure prevent()
+  local text
+  text := "aa bb cc dd"
+  text ?
+    while tab(upto(&letters)) do
+      suspend tab(many(&letters)) \ 1
+end
+
+procedure showList(l)
+  every writes(!l," ") ; write()
+end
+
+procedure showGen(g)
+  writes(g," ")
+end
+
+procedure genVals(i,j)
+  while i < j do { suspend i ; i +:= 1 }
+end
+
+procedure parallel(c1,c2)
+  local x
+  repeat {
+    if x := @c1 then suspend x else fail
+    if x := @c2 then suspend x else fail
+  }
+end
+
+procedure paraList(l)
+  local x, c
+  repeat {
+    every c := !l do {
+      if x := @c then
+        suspend x
+      else
+        fail
+    }
+  }
+end
+
+procedure sequIm(l)
+
+  local seq, result, i
+  static limit
+
+  initial limit := 10
+
+  # Initialize string
+  seq := ""
+
+  # Set limit
+  i := @l[2] | limit
+
+  # Read co-expression values
+  while result := image(@l[1]) do {
+
+    # Check how many values were generated
+    if *l[1] > i then {
+      seq ||:= ",..." ; break
+    } else {
+      seq ||:= "," || result
+    }
+
+  }
+
+  # Skip comma and return string
+  return "{" || seq[2:0] || "}" | "{}"
+
+end
+
+procedure word()
+
+  local line
+
+  # Read line from reader
+  while line := @lines do {
+    line ? {
+      while tab(upto(&letters)) do {
+
+        # Transmit word to writer
+        tab(many(&letters)) @ writer
+
+      }
+    }
+  }
+
+end
+
+procedure reader()
+
+  # Transmit input to words co-expression
+  while read() @ words
+
+end
+
+procedure output()
+
+  # Write generated words
+  while write(@words)
+
+  # Return to main
+  @&main
+
+end
+
+procedure reduce(l)
+
+  local operator, operands, result
+
+  # Get operator and operands
+  # Values in list are co-expressions
+  operator := @l[1] | fail
+  operands := l[2]
+
+  # Initialize result with first value
+  result := @operands | fail
+
+  # Apply operator
+  while result := operator(result,@operands)
+
+  return result
+
+end
+
+procedure cross(w1,w2)
+
+  local i, j
+  static w
+
+  initial w := 20
+
+  write(repl("-",w))
+
+  # Occurrences of character from w2 in w1 (i)
+  # Character position in w2 (j)
+  every i := upto(w2,w1) & j := upto(w1[i],w2) do {
+
+      # Start vertical word
+      every write(right(w2[1 to j - 1],i))
+
+      # Horizontal word
+      write(w1)
+
+      # Finish vertical word
+      every write(right(w2[j + 1 to *w2],i))
+
+      write(repl("-",w))
+
+    }
+
+end
+
+# Place queen in column 'c'
+procedure queen(c)
+  suspend place(1 to 8,c)
+end
+
+# Place queen in row 'r' and column 'c'
+procedure place(r,c)
+
+  # Declare static variables
+  static up, down, row
+
+  # Initialize lists
+  initial {
+    up := list(15,0)
+    down := list(15,0)
+    row := list(8,0)
+  }
+
+  # Check if position is safe
+  if row[r] = up[r + c - 1] = down[8 + r - c] = 0 then {
+
+    # Mark row and diagonals
+    suspend row[r] <- up[r + c - 1] <- down[8 + r - c] <- r
+
+  }
+
+end
+
+procedure star(chars)
+
+  # Generate strings
+  # "" -> ("" || !chars) -> ("a" || ! chars) ...
+  suspend "" | (star(chars) || !chars)
+
+end
+
+# Generate sums
+procedure fibseq(i,j)
+  suspend i | fibseq(j,i + j)
+end
+
+procedure loudF()
+  write("Loud")
+end
+

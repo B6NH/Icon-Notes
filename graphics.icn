@@ -1,0 +1,73 @@
+
+# Graphics
+
+procedure main()
+
+  local w, sphere, c
+
+  # Open window and set its attributes
+  w := open("Test","g","bg=light orange")
+
+  # Modify background setting
+  WAttrib(w,"bg=light green")
+
+  # Set font
+  WAttrib(w,"font=sans,italic,25")
+
+  # Empty line
+  write(w)
+
+  # Display text with new background
+  write(w,repl(" ",3),"Unicon Graphics")
+
+  # Shapes
+  DrawLine(w,80,70,250,70)
+  DrawRectangle(w,100,100,50,50)
+  DrawCircle(w,200,120,20)
+
+  # Define image
+  # Tildes are transparent
+  sphere := "16,g16,_
+    ~~~~B98788AE~~~~ ~~D865554446A~~~_
+    ~D856886544339~~ E8579BA9643323A~_
+    A569DECA7433215E 7569CDB86433211A_
+    5579AA9643222108 4456776533221007_
+    4444443332210007 4333333222100008_
+    533322221100000A 822222111000003D_
+    D41111100000019~ ~A200000000018E~_
+    ~~A4000000028E~~ ~~~D9532248B~~~~"
+
+  # Display sphere image
+  DrawImage(w,250,110,sphere)
+
+  # Initialize counter
+  c := 5
+
+  # Events
+  repeat {
+
+    case Event(w) of {
+
+      # Display purple circle
+      &lpress : {
+        Fg(w,"purple") ; FillCircle(w,&x,&y,10)
+      }
+
+      # Display text up to 5 times
+      "w" : {
+        if 0 < c then {
+          c -:= 1 ; Fg(w,"black") ; write(w,"Event")
+        }
+      }
+
+      # Quit
+      "q" : stop()
+
+    }
+
+  }
+
+  # Close window
+  close(w)
+
+end
