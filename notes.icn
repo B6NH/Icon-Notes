@@ -29,7 +29,7 @@ procedure main(arguments)
         clist, sblst, se, ta, loop, cp, l1, l2, z, line1, line2, line3, arrs, lPro,
         val, co1, co2, c1, c2, limit, lA, lB, lC, lD, emL, lE, lF, f1, f2, f, rv,
         icnFiles, newName, cmd, txtFiles, t, p1, p2, p3, planets, fns, newF, wide,
-        opts, strvar
+        opts, strvar, tree
 
   # Assignments
   m := "matrix" ; str := "abcmatrixdefmatrixzzzmatrix"
@@ -749,11 +749,37 @@ procedure main(arguments)
   write("Q: ",queen(1), queen(2), queen(3), queen(4),
               queen(5), queen(6), queen(7), queen(8))
 
+  # Set new limit
+  limit := 15
+
   # Generate strings from set of characters
-  writes("Star:") ; every writes(star("abc")," ") \ 15 ; write()
+  writes("Star:") ; every writes(star("abc")," ") \ limit ; write()
 
   # Fibonacci sequence
-  writes("FibSQ: ") ; every writes(fibseq(1,1)," ") \ 15 ; write()
+  writes("FibSQ: ") ; every writes(fibseq(1,1)," ") \ limit ; write()
+
+  # Convert string to prefix form
+  write("Prefix: ",fix("(8-2*(1/5+2*4)^2^3)"))
+
+  # Use matching procedures
+  str := "abcdef"
+  str ? write("MProc: ",mtab(4))
+  str ? write("LMtch: ",lmatch(["cd","ab","ef"]))
+
+  # Match shades
+  str := "abblackcdgrayefwhite" ; write(repl("-",Width))
+  write("Shades: ") ; str ? every write(arbno(shades))
+
+  # Recognizer
+  "x+(y*z)" ? {
+
+    # Skip first tag
+    tree := X()[2:0] & pos(0)
+
+  }
+
+  # Display tree with tags
+  write(repl("-",wide)) ; write("Tags: ") ; write(ximage(tree)) ; write(repl("-",wide))
 
   write("Exit")
 

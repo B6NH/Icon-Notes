@@ -278,3 +278,88 @@ procedure loudF()
   write("Loud")
 end
 
+# Leftmost right-associative operator
+procedure rassoc(exp,op)
+  return exp ? form(tab(bal(op)),move(1),tab(0))
+end
+
+# Rightmost left-associative operator
+procedure lassoc(exp,op)
+
+  local j
+
+  return exp ? {
+
+    # Operator position
+    every j := bal(op)
+
+    # Create string
+    form(tab(\j),move(1),tab(0))
+
+  }
+
+end
+
+# Create prefix string
+procedure form(a1,op,a2)
+  return op || "(" || fix(a1) || "," || fix(a2) || ")"
+end
+
+procedure fix(exp)
+
+  # Remove outer parentheses
+  while exp ?:= {
+
+    # Return middle expression
+    2(="(", tab(bal(')')), pos(-1))
+
+  }
+
+  # Find operators starting with lowest precedence
+  return lassoc(exp, '+-' | '*/') | rassoc(exp,'^') | exp
+
+end
+
+# Matching procedure
+procedure mtab(i)
+
+  # Values are dereferenced and position can be restored
+  suspend .&subject[.&pos:&pos <- i]
+
+end
+
+# Match string from list
+procedure lmatch(lst)
+  suspend =!lst
+end
+
+# Match characters
+procedure arb()
+  suspend .&subject[.&pos:&pos <- &pos to *&subject + 1]
+end
+
+# Match 'p' zero or more times
+procedure arbno(p)
+  suspend "" | (p() || arbno(p))
+end
+
+# Match shade from list
+procedure shades()
+  suspend arb() || lmatch(["black", "white", "gray"])
+end
+
+# X ::= T | T+X
+procedure X()
+  suspend ["X", T()] | ["X", T(), ="+", X()]
+end
+
+# T ::= E | E*T
+procedure T()
+  suspend ["T", E()] | ["T", E(), ="*", T()]
+end
+
+# E ::= x | y | z | (X)
+procedure E()
+  suspend ["E", =!"xyz"] | ["E", ="(", X(), =")"]
+end
+
