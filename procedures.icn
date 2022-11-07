@@ -208,11 +208,8 @@ end
 procedure cross(w1,w2)
 
   local i, j
-  static w
 
-  initial w := 20
-
-  write(repl("-",w))
+  sline()
 
   # Occurrences of character from w2 in w1 (i)
   # Character position in w2 (j)
@@ -227,7 +224,7 @@ procedure cross(w1,w2)
       # Finish vertical word
       every write(right(w2[j + 1 to *w2],i))
 
-      write(repl("-",w))
+      sline()
 
     }
 
@@ -361,5 +358,130 @@ end
 # E ::= x | y | z | (X)
 procedure E()
   suspend ["E", =!"xyz"] | ["E", ="(", X(), =")"]
+end
+
+procedure line(s)
+  write(repl(s,60))
+end
+
+procedure sline()
+  line("-")
+end
+
+procedure tline()
+  line("@")
+end
+
+procedure hori()
+  sline() ; tline() ; sline()
+end
+
+# Convert prefix string to tree
+procedure rtree(stree)
+
+  local R
+
+  stree ? {
+
+    # Root
+    if R := node(tab(upto('('))) then {
+
+      move(1)
+
+      # Left arc
+      R.lptr := rtree(tab(bal(',')))
+
+      move(1)
+
+      # Right arc
+      R.rptr := rtree(tab(bal(')')))
+
+    } else {
+
+      # Node at the bottom
+      R := node(tab(0))
+
+    }
+
+  }
+
+  return R
+
+end
+
+# Convert tree nodes to string
+procedure stree(rtree)
+  if /rtree.lptr then
+    return rtree.value
+  else
+    return rtree.value || "(" || stree(rtree.lptr) || "," || stree(rtree.rptr) || ")"
+end
+
+# Visit all nodes
+procedure visit(rtree)
+  suspend rtree
+  suspend visit(\(rtree.lptr | rtree.rptr))
+end
+
+# DAG
+procedure rdag(stree,done)
+
+  local R
+
+  # Initialize node table
+  /done := table()
+
+  # Return known node
+  if R := \done[stree] then {
+    return R
+  } else {
+
+    # Scan tree
+    stree ? {
+
+      # Find node
+      if R := node(tab(upto('('))) then {
+
+        move(1)
+
+        # Left part
+        R.lptr := rdag(tab(bal(',')), done)
+
+        move(1)
+
+        # Right part
+        R.rptr := rdag(tab(bal(')')), done)
+
+      } else {
+
+        # No subnodes
+        R := node(tab(0))
+
+      }
+
+    }
+
+   return done[stree] := R
+
+  }
+
+end
+
+procedure closure(n, S)
+
+  local n1
+
+  # Initialize set
+  /S := set()
+
+  # Add node to set
+  insert(S, n)
+
+  # Add new nodes recursively
+  every n1 := !n do member(S, n1) | closure(n1, S)
+
+  # Return nodes
+  return S
+
 end
 
