@@ -29,7 +29,7 @@ procedure main(arguments)
         clist, sblst, se, ta, loop, cp, l1, l2, z, line1, line2, line3, arrs, lPro,
         val, co1, co2, c1, c2, limit, lA, lB, lC, lD, emL, lE, lF, f1, f2, f, rv,
         icnFiles, newName, cmd, txtFiles, t, p1, p2, p3, planets, fns, newF, wide,
-        opts, strvar, tree, nodes, A, B, C, D, graph
+        opts, strvar, tree, nodes, A, B, C, D, graph, fresh, deck, diamonds, g
 
   hori()
 
@@ -63,8 +63,6 @@ procedure main(arguments)
 
   # Function call
   example("Night")
-
-  sline()
 
   # Loop
   i := 1
@@ -134,8 +132,6 @@ procedure main(arguments)
   # Value from procedure
   write("Multiplication: ",mul4(2,8))
 
-  sline()
-
   # Failure
   if i := maybe(4) then write(i)
 
@@ -184,8 +180,6 @@ procedure main(arguments)
   # Extra arguments are evaluated and discarded
   write(mul4(5,6,extra(3),extra(4)))
 
-  sline()
-
   # Generator procedure
   writes("Suspend: ")
   showGen(genVals(5,8)) ; write()
@@ -229,8 +223,6 @@ procedure main(arguments)
 
   # Position after match
   "salt pepper" ? write(match("salt"))
-
-  sline()
 
   # Tab and match
   writes("Purple: ")
@@ -277,8 +269,6 @@ procedure main(arguments)
   # String length
   write("Word: ",*"Word")
 
-  sline()
-
   # String comparison
   if "ab" == "ab" then write("Lexically Equal")
 
@@ -302,8 +292,6 @@ procedure main(arguments)
 
   # Replace tabs with blanks
   write(detab("aaa\tbbb\tccc",7))
-
-  sline()
 
   # Replicate and reverse string
   write("Replicate: ",repl("*",20))
@@ -342,8 +330,6 @@ procedure main(arguments)
   ld := &letters ++ &digits
   writes("Union: ") ; showGen(ld) ; write()
 
-  sline()
-
   # Analysis range
   write("A E: ",upto('ae',"abcdea",2,7))
 
@@ -369,8 +355,6 @@ procedure main(arguments)
   &random := 5
   write("One or Two: ",?2)
 
-  sline()
-
   # Bitwise operations
   write("Bit: ",iand(7,2)," ",ior(6,1))
   write("Complement: ",icom(5))
@@ -395,8 +379,6 @@ procedure main(arguments)
   writes("Sublist: ") ; sblst := [22,55,11,44,66,1][2:5] ; showList(sblst)
   lst := [1] ; writes("Push: ") ; push(lst,4,5,6) ; showList(lst)
 
-  sline()
-
   # Sets
   se := set([1,2,1,3,1,2,3,3]) ; writes("Set: ") ; showList(se)
   insert(se,4) ; if member(se,4) then write("Member")
@@ -419,8 +401,6 @@ procedure main(arguments)
   l1 := [1,2,3] ; l2 := [4,5,6]
   writes("Product: ")
   every writes(1 to 3,1 to 3," ") ; write()
-
-  sline()
 
   # Data backtracking
   writes("Data: ")
@@ -476,8 +456,6 @@ procedure main(arguments)
   # Call procedure with list of arguments
   arrs := [1,2,3] ; argList ! arrs
 
-  sline()
-
   # Implicit failure
   if not(implicit()) then write("Implicit")
 
@@ -511,8 +489,6 @@ procedure main(arguments)
   co1 := create 1 to 5
   co2 := create 6 to 10
 
-  sline()
-
   # Activate co-expressions
   write("Co-Expression:")
   every 1 to 5 do write(@co1," ",@co2)
@@ -531,8 +507,6 @@ procedure main(arguments)
   every 1 to 5 do writes(@c1," ") ; writes("| ")
   every 1 to 5 do writes(@c2," ") ; write()
   write("Original: ",i)
-
-  sline()
 
   # Pass co-expressions
   limit := 20
@@ -567,8 +541,6 @@ procedure main(arguments)
   emL := [] ; lE := [emL] ; lF := copy(lE)
   if lE[1] === lF[1] then write("Inside")
 
-  sline()
-
   # File names
   f1 := "file1.txt" ; f2 := "file2.txt"
 
@@ -588,15 +560,11 @@ procedure main(arguments)
     close(f)
   }
 
-  sline()
-
   # Verify file
   if f := open(f2) then {
     while write(read(f))
     close(f)
   }
-
-  sline()
 
   # Return last argument
   rv := writes("Produce: ",69) ; write(" ",rv)
@@ -610,8 +578,8 @@ procedure main(arguments)
   # Random file access
   f := open(f1)
   seek(f,16) ; write("Seek: ",where(f))
-  sline()
-  while write(read(f)) ; sline() ; write("Where: ",where(f))
+  while write(read(f))
+  write("Where: ",where(f))
   close(f)
 
   # Rename file
@@ -647,8 +615,6 @@ procedure main(arguments)
   writes("Types: ") ; every writes(type(!lst)," ") ; write()
   fns := [write,sort] ; fns := sort(fns) ; fns[2]("Last")
   writes("Recs: ") ; every writes(!sort(p3)," ") ; write()
-
-  sline()
 
   # Produce function
   proc("write")("Proc")
@@ -686,15 +652,13 @@ procedure main(arguments)
   }
 
   # Execute command
-  sline()
   write("Command: ") ; system("ls -l *.icn")
-  sline()
 
   # Change directory
   # chdir("..")
 
   # Display environment variable
-  write("EnVar: ",getenv("HOME")) ; sline()
+  write("EnVar: ",getenv("HOME"))
 
   # Date and clock
   write("Date: ",&date," | ",&dateline,"\nClock: ",&clock)
@@ -725,12 +689,10 @@ procedure main(arguments)
   write("SBP: ",opts["s"]," ",opts["b"]," ",opts["p"]," ",opts["t"])
 
   # Display structure image
-  sline()
   write("Image: ") ; lst := [1,2,3] ; write(ximage(lst))
-  sline()
 
   # Write structure to standard error output
-  xdump("StLst:", lst) ; sline()
+  xdump("StLst:", lst)
 
   # Use library procedure
   libProc()
@@ -798,7 +760,7 @@ procedure main(arguments)
   str ? write("LMtch: ",lmatch(["cd","ab","ef"]))
 
   # Match shades
-  str := "abblackcdgrayefwhite" ; sline()
+  str := "abblackcdgrayefwhite"
   write("Shades: ") ; str ? every write(arbno(shades))
 
   # Recognizer
@@ -810,11 +772,11 @@ procedure main(arguments)
   }
 
   # Display tree with tags
-  sline() ; write("Tags: ") ; write(ximage(tree)) ; sline()
+  write("Tags: ") ; write(ximage(tree))
 
   # String as nodes
   nodes := rtree("+(/(a,b),–(c,d))")
-  write("Nodes: ") ; write(ximage(nodes)) ; sline()
+  write("Nodes: ") ; write(ximage(nodes))
 
   # Nodes as string
   write("StrNd: ",stree(nodes))
@@ -822,12 +784,8 @@ procedure main(arguments)
   # Node values
   writes("NodeV: ") ; showGen(visit(nodes).value) ; write()
 
-  sline()
-
   # Create directed acyclic graph
   write("DAG: ") ; write(ximage(rdag("+(/(a,b),-(/(a,b),b))")))
-
-  sline()
 
   # Graph
   A := set() ; B := set() ; C := set() ; D := set()
@@ -840,6 +798,35 @@ procedure main(arguments)
   graph := table()
   graph["A"] := A ; graph["B"] := B ; graph["C"] := C ; graph["D"] := D
   graph[A] := "A" ; graph[B] := "B" ; graph[C] := "C" ; graph[D] := "D"
+
+  # Map to transpose
+  write("TrPs: ",map("123456", "264351", "abcdef"))
+
+  # Transpose to reverse
+  write("LonRev: ",tReverse("abcdefghijklmnopqrstuvwxyzextra"))
+
+  # Swap pairs of characters
+  write("Swp: ",swap("swapme"))
+
+  # Skip some characters
+  write("Skp: ",map("124578", "12345678", "03:56:42"))
+
+  # Cards
+  fresh := string(&letters) ; deck := shuffle(fresh)
+  write("Cards: ") ; dispC(deck)
+
+  # Mark diamonds in hand
+  diamonds := repl(" ", 13) || "ABCDEFGHIJKLM" || repl(" ", 26)
+  write(map(deck, fresh, diamonds))
+
+  # Diamonds in order
+  write("Diamonds: \"",string(cset(map(deck, fresh, diamonds))),"\"")
+
+  # Graph as string
+  g := "abbdbfcacbcedddf" ; write("Arcs: ",*g / 2) ; write("Nds: ",*cset(g))
+
+  # Transitive closure
+  write("TrC: ",tclosure(g,'c'))
 
   write("Exit") ; hori()
 

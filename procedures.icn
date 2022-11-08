@@ -209,8 +209,6 @@ procedure cross(w1,w2)
 
   local i, j
 
-  sline()
-
   # Occurrences of character from w2 in w1 (i)
   # Character position in w2 (j)
   every i := upto(w2,w1) & j := upto(w1[i],w2) do {
@@ -223,8 +221,6 @@ procedure cross(w1,w2)
 
       # Finish vertical word
       every write(right(w2[j + 1 to *w2],i))
-
-      sline()
 
     }
 
@@ -482,6 +478,142 @@ procedure closure(n, S)
 
   # Return nodes
   return S
+
+end
+
+procedure tReverse(s)
+
+  static labels, trans, max
+
+  initial {
+    labels := "abcdefghijklmnopqrstuvwxyz"
+    trans := "zyxwvutsrqponmlkjihgfedcba"
+    max := *labels
+  }
+
+  # Short string
+  return if *s <= max then {
+
+    # Truncate 'labels' and 'trans' to size of 's'
+    # For example 'map("edcba","abcde","extra")'
+    map(right(trans, *s), left(labels, *s), s)
+
+  # Long string
+  } else {
+
+    # Reverse second part and map first part
+    return tReverse(right(s, *s - max)) || map(trans, labels, left(s, max))
+
+  }
+
+end
+
+# Swap pairs of characters in string of even length
+procedure swap(s)
+
+  static labels, trans, max
+
+  initial {
+
+    # Initial values
+    labels := "12" ; trans := "21" ; max := *labels
+
+    # Swap character set using labels and trans to get new trans
+    trans := swap(string(&cset))
+
+    # Set new labels and max
+    labels := string(&cset)
+    max := *labels
+
+  }
+
+  return if *s <= max then {
+
+    # Swap short string
+    map(left(trans, *s), left(labels, *s), s)
+
+  } else {
+
+    # Swap parts of string recursively
+    swap(left(s, *s - max)) || map(trans, labels, right(s, max))
+
+  }
+
+end
+
+
+# Shuffle cards (letters)
+procedure shuffle(deck)
+
+  local i
+
+  # Swap cards in string
+  every i := *deck to 2 by -1 do deck[?i] :=: deck[i]
+
+  return deck
+
+end
+
+procedure dispC(deck)
+
+  static fresh, suits, denoms
+
+  initial {
+
+    # All letters
+    fresh := string(&letters)
+
+    # Strings with suits and denoms
+    suits := repl("C", 13) || repl("D", 13) || repl("H", 13) || repl("S", 13)
+    denoms := repl("A23456789TJQK", 4)
+
+  }
+
+  # Map letters in deck to suits and denoms
+  write(map(deck, fresh, suits))
+  write(map(deck, fresh, denoms))
+
+end
+
+# Find immediate successors of nodes
+procedure successors(graph, nodes)
+
+  local snodes
+
+  snodes := ''
+
+  graph ? repeat {
+
+    if tab(any(nodes)) then {
+
+      # Add node successor
+      snodes ++:= move(1)
+
+    } else {
+
+      # Skip node or break
+      move(2) | break
+
+    }
+
+  }
+
+  return snodes
+
+end
+
+procedure tclosure(graph, nodes)
+
+  local snodes
+
+  snodes := nodes
+
+  # Repeat until there are no new nodes
+  while snodes ~=== (nodes ++:= successors(graph, nodes)) do {
+    snodes := nodes
+  }
+
+  return nodes
 
 end
 
