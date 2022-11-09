@@ -1,5 +1,5 @@
 
-# Notes
+# The Icon Programming Language
 
 # Libraries
 link options
@@ -827,6 +827,12 @@ procedure main(arguments)
 
   # Transitive closure
   write("TrC: ",tclosure(g,'c'))
+
+  # Features
+  # write("Features: ") ; every write(&features)
+
+  # Functions
+  # write("Functions: ") ; every write(function())
 
   write("Exit") ; hori()
 

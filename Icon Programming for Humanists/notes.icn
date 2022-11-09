@@ -1,0 +1,265 @@
+
+# Icon Programming for Humanists
+
+global letters, limit
+
+# Save word lengths in list
+procedure word_lengths(line)
+
+  local length
+
+  letters := list(10,0)
+
+  line ? while length := *tab(many(&letters)) do {
+    tab(many(' .,;:!'))
+    letters[length] +:= 1
+  }
+
+  return
+
+end
+
+
+# Display values from global list letters
+procedure printout()
+
+  local n
+
+  every n := 1 to 10 do write("There are ",letters[n]," ",n,"-letter words.")
+
+  return
+
+end
+
+procedure dispChars()
+
+  local n
+
+  # Display characters
+  every n := 0 to 255 do {
+    writes(right(n,3) ,"=" ,char(n)," ")
+    if n % 13 = 0 then write()
+  }
+
+end
+
+# Show histogram of letters
+procedure histogram()
+
+  local n, p
+
+  every n := 30 to 1 by -1 do {
+    writes(repl(" ",10))
+    every p := 1 to 10 do writes(if letters[p] >= n then "X" else " ")
+    write()
+  }
+
+end
+
+procedure getword(filename)
+
+  local chars, punct, filvar, line, word
+
+  # Initialize sets
+  chars := (&letters ++ &digits ++ '\'-')
+  punct := ' .,?";:!'
+
+  # Open file
+  filvar := open(filename)
+
+  # Read lines
+  while line := read(filvar) do {
+    line ? {
+
+      # Skip blanks
+      tab(many(' '))
+
+      # Read word
+      while word := tab(many(chars)) do {
+
+        # Skip punctuation
+        tab(many(punct))
+
+        # Return one word
+        suspend word
+
+      }
+
+    }
+
+  }
+
+  # Close file
+  close(filvar)
+
+end
+
+# Number of words in file
+procedure countfile(filename)
+
+  local total
+
+  total := 0
+
+  every getword(filename) do total +:= 1
+
+  return total
+
+end
+
+procedure modesMeansMedians(filename)
+
+  local filelength, section, counter, letters, word
+
+  # File length
+  filelength := countfile(filename)
+
+  # Section size
+  limit := (filelength / 3)
+
+  # Number of sections
+  section := 0
+
+  # Word counter
+  counter := 0
+
+  # Frequencies
+  letters := list(20,0)
+
+  # Read words
+  every word := getword(filename) do {
+
+    # Increment number of words of this size
+    letters[*word] +:= 1
+    counter +:= 1
+
+    # Next section
+    if counter = limit then {
+
+      # Display section
+      printSection(section +:= 1, letters)
+      printMean(section,letters)
+      printMedian(section,letters)
+
+      # Reset variables
+      letters := list(20,0)
+      counter := 0
+
+    }
+
+  }
+
+  return
+
+end
+
+procedure printSection(p, L)
+
+  local greatest, n, mode
+
+  greatest := 0
+
+  write("Section no. ", p, ".")
+  write("Length Number Such")
+
+  # Find most frequent value
+  every n := 20 to 1 by -1 do {
+
+    # Show values
+    write(right(n, 2),right(L[n], 12))
+
+    # Check if it is greater than greatest
+    if L[n] > greatest then {
+      greatest := L[n]
+      mode := n
+    }
+
+  }
+
+  write(" ", "Mode = ", mode)
+  # write(right("Press any key to continue.", 52)) ; getch()
+
+  return
+
+end
+
+procedure printMean(p, L)
+
+  local letter_total, n
+
+  letter_total := 0
+
+  # Sum word lengths
+  every n := 20 to 1 by -1 do letter_total +:= (n * L[n])
+
+  # Display arithmetic mean
+  write(" ", "Mean = ", real(letter_total) / limit)
+
+  return
+
+end
+
+procedure printMedian(p, L)
+
+  local lcf, n, l2, vcm, valuesToMedian,
+        fractionInMedian, medianMHalf, median
+
+  # Initialize list of cumulative frequencies
+  lcf := list(20,0)
+
+  # First elements are the same
+  lcf[1] := L[1]
+
+  # Calculate other elements
+  every n := 2 to 20 do lcf[n] := (lcf[n - 1] + L[n])
+
+  # Find index where cumulative frequency is larger than or equal half of all values
+  n := 0 ; l2 := limit / 2.0
+  while lcf[n +:= 1] < l2
+  vcm := n
+
+  # Number of values to median index
+  valuesToMedian := l2 - lcf[vcm - 1]
+
+  # Fraction of same values to median
+  fractionInMedian := valuesToMedian / L[vcm]
+
+  # Subtract 0.5 from median value
+  medianMHalf := vcm - 0.5
+
+  # Calculate and display median
+  median := medianMHalf + fractionInMedian
+  write(" ","Median = ", median)
+
+  return
+
+end
+
+procedure main()
+
+  # Word lengths
+  writes("Lengths: ")
+  "One went and came." ? while writes(*tab(upto('. '))," ") do tab(many('. '))
+  write()
+
+  # Word distribution
+  write("Distribution: ")
+  word_lengths("It now remains to write a procedure to write out the table")
+  printout()
+
+  # Read key
+  write("Hit any key to continue")
+  # getch()
+
+  # Histogram
+  histogram()
+
+  # Display characters
+  write("Characters: ") ; dispChars() ; write()
+
+  # File modes
+  modesMeansMedians("file.txt")
+
+end
+
+

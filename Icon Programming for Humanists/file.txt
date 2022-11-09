@@ -1,0 +1,8 @@
+Note that we convert one of the items in the division to a real number (i.e., one with a decimal point) so
+that the result will be precise. If arithmetic functions are performed on numbers of which at least one is
+real, the answer will be real. The function real() converts an integer, or a string if feasible, into a real
+number. One question arises. What would happen if the file were empty? It might appear that we
+should divide by zero and thereby cause a run-time error. In point of fact there is no problem, because
+getword() will fail as soon as it is called, with the result that printout() will not be called at all.
+However, this is something to watch for. It is always a good idea to test a program by offering it
+unusual data, such as an empty file.
