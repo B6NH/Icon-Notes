@@ -1,0 +1,5 @@
+It must be pointed out that modern browsers all handle Unicode to some degree, but with a varying
+measure of completeness. There may even be differences in the same browser when it is used with
+different platforms. It is to be expected that this situation will gradually improve. In the meantime, it is
+well to test the results of your activities on various browsers. Let us now consider each language in
+turn.

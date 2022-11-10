@@ -1,7 +1,7 @@
 
 # Icon Programming for Humanists
 
-global letters, limit
+global letters, limit, chartable
 
 # Save word lengths in list
 procedure word_lengths(line)
@@ -41,6 +41,8 @@ procedure dispChars()
     if n % 13 = 0 then write()
   }
 
+  return
+
 end
 
 # Show histogram of letters
@@ -53,6 +55,8 @@ procedure histogram()
     every p := 1 to 10 do writes(if letters[p] >= n then "X" else " ")
     write()
   }
+
+  return
 
 end
 
@@ -91,6 +95,9 @@ procedure getword(filename)
 
   # Close file
   close(filvar)
+
+  # Procedure must fail
+  # ...
 
 end
 
@@ -177,7 +184,6 @@ procedure printSection(p, L)
   }
 
   write(" ", "Mode = ", mode)
-  # write(right("Press any key to continue.", 52)) ; getch()
 
   return
 
@@ -235,6 +241,178 @@ procedure printMedian(p, L)
 
 end
 
+procedure startHTML(title,outfilvar)
+
+  write(outfilvar,"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0Transitional//EN\">")
+  write(outfilvar,"<html>")
+  write(outfilvar,"<head>")
+  write(outfilvar,"<title>",title,"</title>")
+  write(outfilvar,"<body>")
+  write(outfilvar,"<p>")
+
+  return
+
+end
+
+procedure endHTML(filename,outfilvar)
+
+  # End html
+  write(outfilvar,"</p>")
+  write(outfilvar,"</body>")
+  write(outfilvar,"</html>")
+
+  # Confirmation
+  write("File ",filename,".html has been created.")
+
+  return
+
+end
+
+# Initialize Russian chartable
+procedure initR()
+
+  local charlist, range
+
+  # Character keys
+  charlist := ["A","B","V","G","D","E","|Z","Z","I","J","K","L","M","N","O",
+               "P","R","S","T","U","F","X","C","|C","W","|W","|~","Y","|`","|E","|U","|A",
+               "a","b","v","g","d","e","|z","z","i","j","k","l","m","n","o",
+               "p","r","s","t","u","f","x","c","|c","w","|w","~","y","`","|e","|u","|a"]
+
+  # Character range
+  range := [1040,1103]
+
+  # Special Russian characters
+  chartable["{"] := "&#171;"
+  chartable["}"] := "&#187;"
+  chartable["|O"] := "&#1025;"
+  chartable["|o"] := "&#1105;"
+  chartable["["] := "<br />"
+  chartable["]"] := "</p><p>"
+
+  initializeAny(charlist,range)
+
+  return
+
+end
+
+# Initialize Tamil chartable
+procedure initT()
+
+  local charlist, range
+
+  # Keys
+  charlist := ["V","","|a","|A","|i","|I","|u","|U","","","","|e","|E","|~","",
+               "|o","|O","|`","k","","","","g","c","","j","","|n","T","","","",
+               "|N","t","","","","N","n","p","","","","m","y","r","R","l","L","|l",
+               "v","|s","","s","h","","","","","A","i","I","u","U","","","","e",
+               "E","~","","o","O","`","}"]
+
+  # Loop range
+  range := [2947,3021]
+
+  # Other characters
+  chartable["a"] := ""
+  chartable["|R"] := "&#3065;"
+  chartable["|P"] := "#163;"
+  chartable["["] := "<br />"
+  chartable["]"] := "</p><p>"
+
+  initializeAny(charlist,range)
+
+  return
+
+end
+
+procedure initializeRussian()
+  initializeChartable(initR)
+end
+
+procedure initializeTamil()
+  initializeChartable(initT)
+end
+
+procedure initializeChartable(init)
+
+  # Create new table with default value
+  chartable := table("??")
+
+  # Call init procedure
+  init()
+
+end
+
+procedure initializeAny(charlist,range)
+
+  local n, m
+
+  # List index
+  m := 0
+
+  # Fill table
+  every n := range[1] to range[2] do
+    chartable[charlist[m +:= 1]] := "&#" || n || ";"
+
+  return
+
+end
+
+# Convert text using global chartable
+procedure process()
+
+  local filename,title,infilvar,outfilvar,line,newline,char
+
+  # Read file name and title
+  writes("Enter the name of previously prepared file (default \"uni.txt\"): ")
+  filename := read() ; if "" == filename then filename := "uni.txt"
+
+  writes("What is the title of the text? (default \"Unicode\"): ")
+  title := read() ; if "" == title then title := "Unicode"
+
+  # Open input file
+  (infilvar := open(filename)) | stop(filename," not found.")
+
+  # Open output file
+  outfilvar := open(filename || ".html","w")
+
+  # Beginning of html
+  startHTML(title,outfilvar)
+
+  # Read lines from file
+  while line := read(infilvar) do {
+
+    # Initialize new string
+    newline := ""
+
+    line ? {
+
+      # Add characters to string
+      while char := move(1) do {
+
+        newline ||:= if char << "A" then {
+          char
+        } else if char == "|" then {
+          chartable["|" || move(1)]
+        } else {
+          chartable[char]
+        }
+
+      }
+
+    }
+
+    # Save string in file
+    write(outfilvar,newline)
+
+  }
+
+  # End html
+  endHTML(filename,outfilvar)
+
+  return
+
+end
+
 procedure main()
 
   # Word lengths
@@ -248,7 +426,7 @@ procedure main()
   printout()
 
   # Read key
-  write("Hit any key to continue")
+  # write("Hit any key to continue")
   # getch()
 
   # Histogram
@@ -259,6 +437,14 @@ procedure main()
 
   # File modes
   modesMeansMedians("file.txt")
+
+  # Russian
+  # initializeRussian()
+  # process()
+
+  # Tamil
+  # initializeTamil()
+  # process()
 
 end
 

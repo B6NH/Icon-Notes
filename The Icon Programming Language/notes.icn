@@ -523,7 +523,7 @@ procedure main(arguments)
   writer := create output()
 
   # Run co-expression with output procedure
-  #@writer
+  # @writer
 
   # Display value type
   write("Type: ",type("real"))

@@ -4,6 +4,7 @@
 # Procedure definition
 procedure example(s)
   write("Procedure with parameter : \"",s,"\"")
+  return
 end
 
 # Procedure that returns value
@@ -43,16 +44,20 @@ procedure locV()
   a := 5 ; b := 10
   write("Local: ",a," ",b)
 
+  return
+
 end
 
 # Procedure with variable number of arguments
 procedure varArgs(a,rest[])
   writes("Variable: ",a," and ")
   every writes(!rest," ") ; write()
+  return
 end
 
 procedure argList(a,b,c)
   write("Invocation: ",a," ",b," ",c)
+  return
 end
 
 procedure implicit()
@@ -102,15 +107,20 @@ procedure genVals(i,j)
 end
 
 procedure parallel(c1,c2)
+
   local x
+
   repeat {
     if x := @c1 then suspend x else fail
     if x := @c2 then suspend x else fail
   }
+
 end
 
 procedure paraList(l)
+
   local x, c
+
   repeat {
     every c := !l do {
       if x := @c then
@@ -119,6 +129,7 @@ procedure paraList(l)
         fail
     }
   }
+
 end
 
 procedure sequIm(l)
@@ -222,7 +233,9 @@ procedure cross(w1,w2)
       # Finish vertical word
       every write(right(w2[j + 1 to *w2],i))
 
-    }
+  }
+
+  return
 
 end
 
@@ -269,6 +282,7 @@ end
 
 procedure loudF()
   write("Loud")
+  return
 end
 
 # Leftmost right-associative operator
@@ -358,18 +372,22 @@ end
 
 procedure line(s)
   write(repl(s,60))
+  return
 end
 
 procedure sline()
   line("-")
+  return
 end
 
 procedure tline()
   line("@")
+  return
 end
 
 procedure hori()
   sline() ; tline() ; sline()
+  return
 end
 
 # Convert prefix string to tree
@@ -407,10 +425,13 @@ end
 
 # Convert tree nodes to string
 procedure stree(rtree)
-  if /rtree.lptr then
-    return rtree.value
-  else
-    return rtree.value || "(" || stree(rtree.lptr) || "," || stree(rtree.rptr) || ")"
+
+  return rtree.value || if /rtree.lptr then {
+    ""
+  } else {
+    "(" || stree(rtree.lptr) || "," || stree(rtree.rptr) || ")"
+  }
+
 end
 
 # Visit all nodes
@@ -457,7 +478,8 @@ procedure rdag(stree,done)
 
     }
 
-   return done[stree] := R
+    # Return node and save it in table
+    return done[stree] := R
 
   }
 
@@ -502,7 +524,7 @@ procedure tReverse(s)
   } else {
 
     # Reverse second part and map first part
-    return tReverse(right(s, *s - max)) || map(trans, labels, left(s, max))
+    tReverse(right(s, *s - max)) || map(trans, labels, left(s, max))
 
   }
 
@@ -572,6 +594,8 @@ procedure dispC(deck)
   # Map letters in deck to suits and denoms
   write(map(deck, fresh, suits))
   write(map(deck, fresh, denoms))
+
+  return
 
 end
 
