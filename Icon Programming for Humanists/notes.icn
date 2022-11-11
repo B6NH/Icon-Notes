@@ -1,7 +1,8 @@
 
 # Icon Programming for Humanists
 
-global letters, limit, chartable
+global letters, limit, chartable,
+       A, a, B, b, C, c, D, d, E, e, F, f, impermissible
 
 # Save word lengths in list
 procedure word_lengths(line)
@@ -324,12 +325,40 @@ procedure initT()
 
 end
 
+# Initialize Hebrew chartable
+procedure initH()
+
+  local charlist, range
+
+  # Character order
+  charlist := ["a","b","g","d","h","v","z","j","T","y","X","x","l",
+               "M","m","N","n","S","o","F","f","C","c","q","r","s","t"]
+
+  # Codes
+  range := [1488,1514]
+
+  # Dot in the middle
+  chartable["`"] := "&#x05BC;"
+
+  initializeAny(charlist,range)
+
+  return
+
+end
+
 procedure initializeRussian()
   initializeChartable(initR)
+  return
 end
 
 procedure initializeTamil()
   initializeChartable(initT)
+  return
+end
+
+procedure initializeHebrew()
+  initializeChartable(initH)
+  return
 end
 
 procedure initializeChartable(init)
@@ -363,6 +392,7 @@ procedure process()
   local filename,title,infilvar,outfilvar,line,newline,char
 
   # Read file name and title
+  write("Prepared files: Russian - \"unir.txt\", Tamil - \"unit.txt\", Hebrew - \"unih.txt\"")
   writes("Enter the name of previously prepared file (default \"uni.txt\"): ")
   filename := read() ; if "" == filename then filename := "uni.txt"
 
@@ -389,6 +419,8 @@ procedure process()
       # Add characters to string
       while char := move(1) do {
 
+        # Punctuation
+        # Variable is lexically less than "A"
         newline ||:= if char << "A" then {
           char
         } else if char == "|" then {
@@ -410,6 +442,71 @@ procedure process()
   endHTML(filename,outfilvar)
 
   return
+
+end
+
+procedure initHex()
+
+ # Define hexidecimal letters
+ A := a := 10
+ B := b := 11
+ C := c := 12
+ D := d := 13
+ E := e := 14
+ F := f := 15
+
+ # Other symbols
+ impermissible := (&ascii -- &digits -- 'aAbBcCdDeEfF')
+
+ return
+
+end
+
+procedure processHex()
+
+  local hexno, length, result, n
+
+  write("This program converts hex numbers to decimal.")
+  writes("Enter hex number to be converted. Period (.) to finish: ")
+
+  # Read hex number
+  while (hexno := read()) ~== "." do {
+
+    # Test input
+    hexno ? if upto(impermissible) then stop(hexno," is an invalid entry.\nBye.")
+
+    # Initialize result and string length
+    length := *hexno
+    result := 0
+
+    # Add values
+    every n := 1 to length do {
+
+      # Convert digits
+      result +:= convert(hexno[n],length - n)
+
+    }
+
+    # Display decimal result and ask again
+    write("Hex number ",hexno," = ",result," decimal.")
+    writes("Enter hex number to be converted. Period (.) to finish: ")
+
+  }
+
+  write("Bye.")
+
+  return
+
+end
+
+procedure convert(digit,index)
+
+  local outcome
+
+  # Return hexidecimal digit value
+  outcome := (integer(digit) | variable(digit)) * (16 ^ index)
+
+  return outcome
 
 end
 
@@ -440,11 +537,19 @@ procedure main()
 
   # Russian
   # initializeRussian()
-  # process()
 
   # Tamil
   # initializeTamil()
+
+  # Hebrew
+  # initializeHebrew()
+
+  # Process Russian/Tamil/Hebrew
   # process()
+
+  # Convert hexidecimal numbers
+  # initHex()
+  # processHex()
 
 end
 
