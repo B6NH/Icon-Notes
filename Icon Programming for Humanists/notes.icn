@@ -510,7 +510,233 @@ procedure convert(digit,index)
 
 end
 
+# Generate sentences from file
+procedure get_sentence(filename)
+
+  local filvar, sentence, line, substring, markers
+
+  # Set markers
+  markers := '.!?'
+
+  # Open file
+  filvar := open(filename)
+
+  # Initialize sentence
+  sentence := ""
+
+  # Read line
+  while line := read(filvar) do {
+
+    line ? {
+
+      # Find sentence ending
+      while substring := tab(upto(markers)) do {
+
+        # Add substring to sentence
+        sentence ||:= (substring || tab(many(markers)))
+
+        # Generate current sentence
+        suspend sentence
+
+        # Skip blanks and reset sentence
+        tab(many(' '))
+        sentence := ""
+
+      }
+
+      # Sentence is unfinished
+      # Add remaining part of this line and continue
+      if not pos(0) then sentence ||:= (line[&pos:0] || " ")
+
+    }
+
+  }
+
+  close(filvar)
+
+end
+
+# Generate words from sentence
+procedure getword_from_sentence(sentence)
+
+  local chars, punct, word
+
+  # Initialize local variables
+  chars := (&letters ++ &digits ++ '\'-')
+  punct := ' .,?";:!'
+
+  # Scan sentence
+  sentence? {
+
+    # Skip initial blank characters
+    tab(many(' '))
+
+    # Read and suspend words
+    while word := tab(many(chars)) do {
+      tab(many(punct))
+      suspend word
+    }
+
+  }
+
+end
+
+# Count words in sentence
+procedure countsentence(sentence)
+
+  local total
+
+  total := 0
+
+  # Count generated words
+  every getword_from_sentence(sentence) do total +:= 1
+
+  return total
+
+end
+
+# Number of words in sentences
+procedure getav(filename)
+
+  local numSent, listSent, sentence
+
+  listSent := list(20,0)
+  numSent := 0
+
+  # Read sentence from file
+  every sentence := get_sentence(filename) do {
+
+    # Increment number of sentences and sentence counter
+    listSent[countsentence(sentence)] +:= 1
+    numSent +:= 1
+
+  }
+
+  printDev(listSent,numSent)
+
+  return
+
+end
+
+procedure printDev(listSent,numSent)
+
+  local word_total, n, mean
+
+  write("Length Number Such")
+  word_total := 0
+
+  # Display values from list
+  every n := 20 to 1 by -1 do {
+
+    # Show number of words
+    write(right(n,2),right(listSent[n],12))
+
+    # Count all words
+    word_total +:= (n * listSent[n])
+
+  }
+
+  # Show arithmetic mean and standard deviation
+  mean := real(word_total) / numSent
+  writes(" ","Mean = ", mean)
+  writes(right("Standard deviation = ", 42))
+  write(standard_deviation(listSent,numSent,mean))
+
+  return
+
+end
+
+procedure standard_deviation(listSent,numSent,mean)
+
+  local sum_of_squares, n, st_dev
+
+  sum_of_squares := 0
+
+  # Sum squares of differences multiplied by number of sentences
+  every n := 1 to 20 do {
+    sum_of_squares +:= ((n - mean) ^ 2) * listSent[n]
+  }
+
+  # Calculate standard deviation
+  # Fractional power is square root
+  st_dev := ((real(sum_of_squares) / numSent) ^ 0.5)
+
+  return st_dev
+
+end
+
+procedure procFreq(filename, word_list)
+
+  local numWords, word, n, word_freq
+
+  # Initialize table with default value 0
+  word_freq := table(0)
+
+  numWords := 0
+
+  # Read words from file
+  every word := getword(filename) do {
+
+    # Add 1 to totalWords
+    numWords +:= 1
+
+    every n := 1 to *word_list do {
+
+      # If current word is in word_list count its occurrence
+      if word == word_list[n] then {
+
+        word_freq[word] +:= 1
+
+        # Stop looking for word
+        break
+
+      }
+
+    }
+
+  }
+
+  # Display results
+  printFreq(numWords, word_freq)
+
+  return
+
+end
+
+procedure printFreq(numWords, wf)
+
+  local wl, n, word, occurrences
+
+  # Labels
+  write("Total number of words in file = ",numWords)
+  writes("Word")
+  writes(right("Occurrences",30))
+  write(right("Percentage", 30))
+
+  # Sort word frequencies
+  # This converts table to list of pairs
+  wl := sort(wf)
+
+  # Show word frequencies
+  every n := 1 to *wl do {
+    word := wl[n][1]
+    occurrences := wl[n][2]
+    writes(word)
+    writes(right(occurrences,34 - *word))
+    write(right((occurrences * 100.0) / numWords,30))
+  }
+
+  return
+
+end
+
+procedure stars()
+  write(repl("*",70))
+end
+
 procedure main()
+
+  stars()
 
   # Word lengths
   writes("Lengths: ")
@@ -526,11 +752,19 @@ procedure main()
   # write("Hit any key to continue")
   # getch()
 
+  stars()
+
+  write("Histogram")
+
   # Histogram
   histogram()
 
+  stars()
+
   # Display characters
   write("Characters: ") ; dispChars() ; write()
+
+  stars()
 
   # File modes
   modesMeansMedians("file.txt")
@@ -550,6 +784,14 @@ procedure main()
   # Convert hexidecimal numbers
   # initHex()
   # processHex()
+
+  stars()
+
+  getav("sdev.txt")
+
+  stars()
+
+  procFreq("wfreq.txt",["the","by","in"])
 
 end
 

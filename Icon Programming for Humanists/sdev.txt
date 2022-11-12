@@ -1,0 +1,6 @@
+The next line is then fetched from the file. Let us consider a different
+possibility. We are now ready for a procedure which will do the main work
+of the program. This will be simpler than our previous program in that it
+does not have to divide. The variable sentence will hold the sentences in the file.
+We also have a counter which is increased in value each time. We figure the
+word total by running through the list. Notice that there is still no need to insert.
