@@ -2,7 +2,8 @@
 # Icon Programming for Humanists
 
 global letters, limit, chartable,
-       A, a, B, b, C, c, D, d, E, e, F, f, impermissible
+       A, a, B, b, C, c, D, d, E, e, F, f, impermissible,
+       values, x_min, x_range, y_min, y_range
 
 # Save word lengths in list
 procedure word_lengths(line)
@@ -19,7 +20,6 @@ procedure word_lengths(line)
   return
 
 end
-
 
 # Display values from global list letters
 procedure printout()
@@ -730,11 +730,295 @@ procedure printFreq(numWords, wf)
 
 end
 
+procedure getDramaInfo()
+
+  local dlist
+
+  # Initialize list
+  dlist := []
+
+  # Display message
+  write("Enter mean words per verse for each play in order of composition.")
+  write("Hit return after each value. Single period + return to finish.")
+
+  # Read input
+  while put(dlist, numeric(read()))
+
+  # Stop program
+  if *dlist = 0 then stop("Bye!")
+
+  # Return list of values
+  return dlist
+
+end
+
+procedure procDrama(drama_list)
+
+  local sort_list, sum_of_squares, n, dtable, rho
+
+  n := sum_of_squares := 0
+
+  # Sort data
+  sort_list := sort(drama_list)
+
+  dtable := table(0)
+
+  # Display values
+  writes("Values are: ")
+  while writes(drama_list[n +:= 1]," ")
+  write()
+
+  # Save sorted positions of values in table
+  every n := 1 to *drama_list do
+    dtable[sort_list[n]] := n
+
+  # Sum squares of differences between current position and position in sorted list
+  every n := 1 to *drama_list do
+    sum_of_squares +:= ((n - dtable[drama_list[n]]) ^ 2)
+
+  # Calculate rho
+  rho := (1 - (6 * sum_of_squares) / (real(*drama_list) * ((*drama_list ^ 2) - 1)))
+
+  # Show result
+  write("rho = ", rho)
+
+  return
+
+end
+
+procedure getScValues()
+
+  values := []
+
+  # Read values of 'x' and 'y'
+  repeat {
+    writes ("X-value? Nonnumeric to finish. ")
+    put(values,numeric(read())) | break
+    writes("Y-value? ")
+    while not put(values,numeric(read())) do
+    writes("You must enter a numeric value. Y-value?")
+  }
+
+  return
+
+end
+
+# Calculate value ranges
+# Set global variables x_min, y_min, x_range, y_range
+procedure figure()
+
+  local x_max, y_max, n
+
+  # Initialize min and max values
+  x_min := x_max := values[1]
+  y_min := y_max := values[2]
+
+  # Find minimum and maximum values
+  every n := 3 to *values by 2 do {
+    (x_min := (x_min > values[n])) | (x_max := (x_max < values[n]))
+    (y_min := (y_min > values[n + 1])) | (y_max := (y_max < values[n + 1]))
+  }
+
+  # Set range
+  x_range := x_max - x_min
+  y_range := y_max - y_min
+
+  return
+
+end
+
+# Scale value to max
+procedure scale(n,min,range,max)
+  return integer((n - min) / real(range) * max)
+end
+
+# Display scattergram
+procedure scatter()
+
+  local n, row, col, p
+
+  # Erase screen
+  writes("\e[2J")
+
+  # Process x-y pairs
+  every n := 1 to *values by 2 do {
+
+    # Calculate column and row
+    # Values are scaled to 80 columns and 25 rows
+    col := scale(values[n], x_min, x_range, 79) + 1
+    row := 26 - ((scale(values[n + 1], y_min, y_range, 24) + 1))
+
+    # Set position under first scattergram dot
+    /p := [row + 1,col]
+
+    # Move cursor and write dot
+    writes("\e[", row, ";", col, "H")
+    writes(".")
+
+  }
+
+  # Set command prompt position
+  writes("\e[", p[1], ";", p[2], "H")
+
+  return
+
+end
+
+# Calculate arithmetic mean
+procedure mean(L)
+
+  local total,n
+
+  total := 0
+
+  every n := 1 to *L do {
+    total +:= L[n]
+  }
+
+  return real(total) / *L
+
+end
+
+# Calculate standard deviation using mean
+procedure st_dv(m, L)
+
+  local sum_of_squares, n
+
+  sum_of_squares := 0
+
+  every n := 1 to *L do {
+    sum_of_squares +:= ((L[n] - m) ^ 2)
+  }
+
+  return (real(sum_of_squares) / *L) ^ 0.5
+
+end
+
+# Calculate z-score
+procedure z_sc(raw_score,m,sd)
+  return (raw_score - m) / real(sd)
+end
+
+# Check if currently scanned word is in list L
+procedure is_in_list(L)
+  suspend tab(match(!L)) & pos(0)
+end
+
+# Create table with numbers of word occurrences in file
+procedure make_table(flnm,L)
+
+  local t, word
+
+  # Create table
+  t := table(0)
+
+  # Read words from file
+  every word := getword(flnm) do {
+
+    word ? {
+
+      # Count word if it is in list
+      if is_in_list(L) then {
+        t[word] +:= 1
+      }
+
+    }
+
+  }
+
+  return t
+
+end
+
+procedure procPearson(wl,fnm_a,fnm_b)
+
+  local table_a, table_b, list_a, list_b, n, a_mean, b_mean,
+        a_sd, b_sd, z_sc_product, coefficient
+
+  # Initialize sum of products
+  z_sc_product := 0
+
+  # Create tables with numbers of word occurrences in each file
+  table_a := make_table(fnm_a,wl)
+  table_b := make_table(fnm_b,wl)
+
+  # Lists contain number of occurrences of nth words
+  list_a := list(*wl,0)
+  list_b := list(*wl,0)
+  every n := 1 to *wl do {
+    list_a[n] := table_a[wl[n]]
+    list_b[n] := table_b[wl[n]]
+  }
+
+  # Calculate mean and standard deviation
+  a_mean := mean(list_a)
+  b_mean := mean(list_b)
+  a_sd := st_dv(a_mean,list_a)
+  b_sd := st_dv(b_mean,list_b)
+
+  # Sum products of corresponding z-scores
+  every n := 1 to *wl do
+    z_sc_product +:= z_sc(list_a[n] , a_mean, a_sd) * z_sc(list_b[n], b_mean, b_sd)
+
+  # Calculate and display coefficient
+  coefficient := z_sc_product / *wl
+  write("Coefficient is ",coefficient)
+
+  return
+
+end
+
+# Read at most 2 filenames
+procedure getfiles(L)
+
+  local L_out, n, flag
+
+  L_out := []
+
+  # Process list
+  every n := 1 to *L do {
+
+    # Scan list element
+    L[n] ? {
+
+      if isfile() then {
+
+        # If element is file add it to list
+        put(L_out, L[n])
+
+        # Break after second string was added
+        (/flag := 1) | break
+
+      }
+
+    }
+
+  }
+
+  # Return list of files
+  return L_out
+
+end
+
+# File consists of permissible characters and ends with '.txt'
+procedure isfile()
+
+  static permissible
+
+  initial permissible := &letters ++ &digits ++ '$&#%\'()-@^{}~` !_'
+
+  return tab(many(permissible)) || =".txt" & pos(0)
+
+end
+
 procedure stars()
   write(repl("*",70))
+  return
 end
 
 procedure main()
+
+  local words, filelist, committee_A, memcount, members, k
 
   stars()
 
@@ -791,8 +1075,54 @@ procedure main()
 
   stars()
 
-  procFreq("wfreq.txt",["the","by","in"])
+  words := ["the","by","in"]
+
+  procFreq("wfreq.txt",words)
+
+  stars()
+
+  # Spearman rank correlation
+  procDrama([1,2,3,4,5,6,7,8,9,10])
+  procDrama([8.93,9.02,9.147,9.26,9.152,9.2,9.22,9.32,9.48,9.53])
+  # procDrama(getDramaInfo())
+
+  stars()
+
+  # Scattergram
+  # getScValues()
+  # figure()
+  # scatter()
+
+  # Pearson's coefficient of correlation
+  procPearson(words,"wlist.txt","wfreq.txt")
+
+  # Read file names
+  filelist := getfiles(["one.txt","three.abc","four.abc","two.txt","five.txt"])
+  write("First file is ",filelist[1])
+  write("Second file is ",filelist[2])
+
+  stars()
+
+  # Create set
+  committee_A := set(["Jones", "Brown", "Rodriguez", "Sperber"])
+
+  # Set membership
+  if member(committee_A,"Jones") then write("Set")
+
+  # Insert set element
+  insert(committee_A,"Jackson")
+
+  # Union
+  committee_A ++:= set(["Jackson"])
+
+  # Number of occurrences in list
+  # Count only members that are in committee_A
+  memcount := table(0)
+  members := ["Jones","Brown","Jones","Jones","Unknown"]
+  every memcount[member(committee_A,!members)] +:= 1
+  every k := key(memcount) do write(k,": ",memcount[k])
+
+  stars()
 
 end
-
 
