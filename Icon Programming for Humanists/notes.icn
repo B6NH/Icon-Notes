@@ -3,7 +3,7 @@
 
 global letters, limit, chartable,
        A, a, B, b, C, c, D, d, E, e, F, f, impermissible,
-       values, x_min, x_range, y_min, y_range
+       values, x_min, x_range, y_min, y_range, nouns, verbs
 
 # Save word lengths in list
 procedure word_lengths(line)
@@ -1011,6 +1011,139 @@ procedure isfile()
 
 end
 
+procedure rhyme()
+
+  local n, numbers
+
+  # Number of bottles
+  n := 10
+
+  # Initialize words
+  numbers := list(10)
+  numbers[1] := "One"
+  numbers[2] := "Two"
+  numbers[3] := "Three"
+  numbers[4] := "Four"
+  numbers[5] := "Five"
+  numbers[6] := "Six"
+  numbers[7] := "Seven"
+  numbers[8] := "Eight"
+  numbers[9] := "Nine"
+  numbers[10] := "Ten"
+
+  # Main loop
+  while n > 0 do {
+    write(numbers[n]," green bottle",plural(n)," hanging on the wall.")
+    write(numbers[n]," green bottle" ,plural(n), " hanging on the wall.")
+    write("Now if one green bottle should accidentally fall,")
+    write("There'd be ",lcase(numbers[n -:= 1])," green bottle",plural(n)," hanging on the wall.")
+  }
+
+  write("There'd be no green bottles hanging on the wall.")
+
+  return
+
+end
+
+procedure plural(n)
+  return if 1 = n then "" else "s"
+end
+
+procedure lcase(s)
+  return map(s,&ucase,&lcase)
+end
+
+procedure get_started()
+
+  local str
+
+  # Read input from user
+  writes("This is the ")
+  str := read()
+  writes("That ")
+  str ||:= " that " || read()
+
+  return str
+
+end
+
+procedure jack(conc)
+
+  local noun,verb,n
+
+  # Initialize lists
+  nouns := []
+  verbs := []
+
+  repeat {
+
+    # Reset list index
+    n := 0
+
+    # Read verb and noun
+    write() ; writes("This is the ")
+    noun := check(read(),1)
+    writes("That ")
+    verb := check(read(),2)
+    writes("The ")
+
+    # Show nouns and verbs from lists
+    while write(nouns[n +:= 1]) do {
+      writes("That ",verbs[n]," the ")
+    }
+
+    # Add noun and verb at the beginning
+    push(nouns,noun)
+    push(verbs,verb)
+
+    # Display last string
+    write(conc)
+
+  }
+
+  return
+
+end
+
+# Shuffle list
+procedure shuffle(L)
+
+  local i
+
+  i := *L
+  while i >= 2 do {
+
+    # Swap random value
+    L[?i] :=: L[i]
+    i -:= 1
+
+  }
+
+  return L
+
+end
+
+procedure check(s,n)
+
+  local p
+
+  # Exit program
+  if upto('.', s) then {
+    stop()
+  } else {
+
+    # Remove plus sing and shuffle global list
+    if p := upto('+', s) then {
+      s[p] := ""
+      shuffle(if 1 = n then nouns else verbs)
+    }
+
+  }
+
+  return s
+
+end
+
 procedure stars()
   write(repl("*",70))
   return
@@ -1123,6 +1256,12 @@ procedure main()
   every k := key(memcount) do write(k,": ",memcount[k])
 
   stars()
+
+  # Bottles
+  # rhyme()
+
+  # Jack
+  # jack(get_started())
 
 end
 
