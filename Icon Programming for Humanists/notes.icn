@@ -3,7 +3,11 @@
 
 global letters, limit, chartable,
        A, a, B, b, C, c, D, d, E, e, F, f, impermissible,
-       values, x_min, x_range, y_min, y_range, nouns, verbs
+       values, x_min, x_range, y_min, y_range, nouns, verbs,
+       filvar, vocabulary
+
+# Record declaration
+record students(name,soc_sec,pwd,fstexam,secexam,final,total,grade)
 
 # Save word lengths in list
 procedure word_lengths(line)
@@ -1144,6 +1148,347 @@ procedure check(s,n)
 
 end
 
+procedure menu()
+
+  # Display options
+  write(center("Data Base Program", 80))
+  write()
+  write("Do you wish to")
+  write("\t1. Initialize")
+  write("\t2. Update")
+  write("\t3. Report")
+  write()
+  writes("Enter 1,2 or 3 and press return.")
+
+  # Read and return choice
+  return read()
+
+end
+
+procedure database()
+
+  local result
+
+  # Get choice from menu procedure
+  result := menu()
+
+  # Select function
+  case result of {
+    "1" : initialize()
+    "2" : update()
+    "3" : report()
+    default : write("Goodbye")
+  }
+
+end
+
+procedure write_to_file(f,s)
+
+  local filvar, n, p, line
+
+  # Open file
+  filvar := open(f,"w")
+
+  # Initialize index
+  n := 0
+
+  # Loop through list
+  while (n +:= 1) <= *s do {
+
+    line := ""
+
+    # Fields are separated by '%' sign
+    # Variable 'p' is used to read record values
+    every p := 1 to 8 do {
+      line ||:= s[n][2][p] || "%"
+    }
+
+    # Write line in file
+    write(filvar,line)
+
+  }
+
+  # Close file
+  close(filvar)
+
+end
+
+procedure initialize()
+
+  local filename, student, student_table, student_list
+
+  # Create student table
+  student_table := table()
+
+  # Read course number
+  writes("Enter the course number, e.g. 101 ")
+  filename := read()
+
+  # Two digits of current year
+  writes("Enter the last two digits of the current year ")
+  filename ||:= read()
+
+  # Semester digit
+  writes("Enter a single digit for the semester ")
+  filename ||:= read() || "1.dat"
+
+  # Display message
+  writes("The name of the file is ", filename)
+  write(". Please note this for future use.")
+  write("Enter information about students. Enter period(.) only when asked for name to finish.")
+
+  # Read student data
+  repeat {
+
+    # Create object
+    student := students("","","" ,0,0,0,0, "")
+    write()
+
+    # Read name
+    writes("Name? ")
+    student.name := read()
+
+    # Break if name is single dot
+    if student.name == "." then {
+      break
+
+    # Otherwise read rest of data
+    } else {
+
+      # Save security number and password
+      writes("Social security number? ")
+      student.soc_sec := read()
+      writes ("Password? ")
+      student.pwd := read()
+
+      # Save student object in table
+      student_table[student.name] := student
+
+    }
+
+    # Convert table to list and write it to file
+    student_list := sort(student_table)
+    write_to_file(filename,student_list)
+
+  }
+
+end
+
+procedure get_version()
+
+  local filename, n
+
+  # Read file name
+  n := 0
+  write("Enter the name of the ORIGINAL filename ")
+  filename := read()
+
+  # Find last version
+  while close(open(filename[1:7] || (n +:= 1) || ".dat"))
+
+  # Return name of the latest file
+  return filename[1:7] || (n - 1) || ".dat"
+
+end
+
+procedure update()
+
+  local filename, filvar, n, student_list, line, student, inner_list, current
+
+  # Read file name
+  filename := get_version()
+
+  # Open file
+  filvar := open(filename)
+
+  # Initialize list of students
+  student_list := []
+
+  # Read line from file
+  while line := read(filvar) do {
+
+    # Create record and list
+    student := students("", "", "", 0, 0, 0, 0, "")
+    inner_list := list(2)
+
+    # Save fields from file in record
+    n := 0
+    line ? {
+      while student[n +:= 1] := tab(upto('%')) do {
+        ="%"
+      }
+    }
+
+    # Copy data from record to list
+    inner_list[1] := student.name
+    inner_list[2] := student
+
+    # Add data to main list
+    put(student_list,inner_list)
+
+  }
+
+  # Close file
+  close(filvar)
+
+  # Read student data from list
+  n := 0
+  while current := student_list[n +:= 1][2] do {
+
+    # Show name
+    write("Name: ",current.name)
+
+    # Show and update scores
+    write("Current first exam = ",current.fstexam)
+    writes("New score? ")
+    current.fstexam := read()
+    write("Current second exam = ",current.secexam)
+    writes("New score? ")
+    current.secexam := read()
+    write("Current final exam = ",current.final)
+    writes("New score? ")
+    current.final := read()
+
+    # Record was directly modified
+    # Assignment is unnecessary
+    # student_list[n][2] := current
+
+  }
+
+  # Update file name
+  filename[7] +:= 1
+
+  # Save data in file
+  write_to_file(filename,student_list)
+
+  return
+
+end
+
+procedure report()
+  write("Space reserved for reports.")
+end
+
+procedure initializeVocabulary()
+
+  local vocab
+
+  # Set file name
+  # writes("Name of vocabulary? ")
+  # vocab := read()
+
+  vocab := "frtime"
+
+  # Open vocabulary
+  (filvar := open(vocab)) | stop("Vocabulary not found.")
+
+  return
+
+end
+
+procedure create_table()
+
+  local line, a, b
+
+  # Create vocabulary table
+  vocabulary := table("not found")
+
+  # Read vocabulary lines
+  while line := read(filvar) do {
+
+    # Read words
+    line ? {
+      a := tab(upto('%'))
+      move(1)
+      b := tab(0)
+    }
+
+    # Save words in table
+    vocabulary[a] := b
+    vocabulary[b] := a
+
+  }
+
+  return
+
+end
+
+procedure processVocabulary()
+
+  local word
+
+  write("Do you wish to be tested? y/n ")
+
+  if getch() == "y" then {
+    test()
+  } else {
+
+    writes("Enter word in English or target language: ")
+
+    while (word := read()) ~== "." do {
+      write("The translation is ", vocabulary[word], ".")
+      writes("Enter word in English or target language. Period to finish: ")
+    }
+
+  }
+
+  return
+
+end
+
+procedure test()
+
+  local item, answer, total, correct
+
+  # Set values to zero
+  total := correct := 0
+
+  # Select random value from table
+  item := ?vocabulary
+
+  # Question
+  writes("What is the translation of ",item,"? ")
+
+  # Answer or finish
+  while (answer := read()) ~== "." do {
+
+    # Count questions
+    total +:= 1
+
+    # Check answer
+    if answer == vocabulary[item] then {
+      correct +:= 1
+      write("Correct.")
+    } else {
+      write("Correct answer is: ",vocabulary[item],".")
+    }
+
+    # Next question
+    item := ?vocabulary
+    writes("What is the translation of ",item,"? Period to finish: ")
+
+  }
+
+  # Display score
+  write("Your score is ",(correct * 100) / total,"%.")
+
+  return
+
+end
+
+procedure finish()
+  close(filvar)
+  write ("Goodbye.")
+  return
+end
+
+procedure vocabulary()
+  initializeVocabulary()
+  create_table()
+  processVocabulary()
+  finish()
+end
+
 procedure stars()
   write(repl("*",70))
   return
@@ -1262,6 +1607,12 @@ procedure main()
 
   # Jack
   # jack(get_started())
+
+  # Database
+  # database()
+
+  # Vocabulary
+  vocabulary()
 
 end
 
