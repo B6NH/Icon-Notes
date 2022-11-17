@@ -393,7 +393,7 @@ end
 # Convert text using global chartable
 procedure process()
 
-  local filename,title,infilvar,outfilvar,line,newline,char
+  local filename, title, infilvar, outfilvar, line, newline, char
 
   # Read file name and title
   write("Prepared files: Russian - \"unir.txt\", Tamil - \"unit.txt\", Hebrew - \"unih.txt\"")
@@ -442,8 +442,12 @@ procedure process()
 
   }
 
+  close(infilvar)
+
   # End html
   endHTML(filename,outfilvar)
+
+  close(outfilvar)
 
   return
 
@@ -1158,7 +1162,7 @@ procedure menu()
   write("\t2. Update")
   write("\t3. Report")
   write()
-  writes("Enter 1,2 or 3 and press return.")
+  writes("Enter 1,2 or 3 and press return. ")
 
   # Read and return choice
   return read()
@@ -1291,15 +1295,9 @@ procedure get_version()
 
 end
 
-procedure update()
+procedure readStudents(filvar)
 
-  local filename, filvar, n, student_list, line, student, inner_list, current
-
-  # Read file name
-  filename := get_version()
-
-  # Open file
-  filvar := open(filename)
+  local student_list, line, student, inner_list, n
 
   # Initialize list of students
   student_list := []
@@ -1327,6 +1325,23 @@ procedure update()
     put(student_list,inner_list)
 
   }
+
+  return student_list
+
+end
+
+procedure update()
+
+  local filename, filvar, n, student_list, line, student, inner_list, current
+
+  # Read file name
+  filename := get_version()
+
+  # Open file
+  filvar := open(filename)
+
+  # Read student data
+  student_list := readStudents(filvar)
 
   # Close file
   close(filvar)
@@ -1365,8 +1380,70 @@ procedure update()
 
 end
 
+procedure grade(score)
+
+  return if score >= 92 then {
+     "A"
+  } else if score >= 89 then {
+    "A-"
+  } else if score >= 86 then {
+    "B"
+  } else if score >= 83 then {
+    "B-"
+  } else if score >= 80 then {
+    "C"
+  } else if score >= 77 then {
+    "C-"
+  } else if score >= 74 then {
+    "D"
+  } else if score >= 71 then {
+    "D-"
+  } else {
+    "F"
+  }
+
+end
+
 procedure report()
-  write("Space reserved for reports.")
+
+  local filename, filvar, line, st, student_list, i
+
+  # Open file
+  filename := get_version()
+  filvar := open(filename)
+
+  # Read values
+  student_list := readStudents(filvar)
+
+  # Process student data
+  every i := 1 to *student_list do {
+
+    # Second list element is record
+    st := student_list[i,2]
+
+    # Calculate and set grade
+    st.total := 0.3 * (st.fstexam + st.secexam) + 0.4 * st.final
+    st.grade := grade(st.total)
+
+    # Display data
+    write("Name: ",st.name)
+    write("First exam: ",st.fstexam)
+    write("Second exam: ",st.secexam)
+    write("Final exam: ",st.final)
+    write("Total: ",st.total)
+    write("Grade: ",st.grade)
+
+  }
+
+  # All data was read
+  close(filvar)
+
+  # Save calculated data in file
+  # Keep old file name
+  write_to_file(filename,student_list)
+
+  return
+
 end
 
 procedure initializeVocabulary()
@@ -1609,10 +1686,10 @@ procedure main()
   # jack(get_started())
 
   # Database
-  # database()
+  database()
 
   # Vocabulary
-  vocabulary()
+  # vocabulary()
 
 end
 
