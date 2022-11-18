@@ -4,7 +4,8 @@
 global letters, limit, chartable,
        A, a, B, b, C, c, D, d, E, e, F, f, impermissible,
        values, x_min, x_range, y_min, y_range, nouns, verbs,
-       filvar, vocabulary
+       filvar, vocabulary, inFileName, inputFileVariable, outputFileVariable, tagCounter,
+       ifv, ofv
 
 # Record declaration
 record students(name,soc_sec,pwd,fstexam,secexam,final,total,grade)
@@ -1564,6 +1565,265 @@ procedure vocabulary()
   create_table()
   processVocabulary()
   finish()
+  return
+end
+
+procedure initialPageNo()
+
+  local line
+
+  # Find line with page number
+  # Write it to file and break
+  while line := read(inputFileVariable) do {
+    line ? {
+
+      # Initial page number
+      if find("<pb") then {
+        tab(upto(&digits))
+        write(outputFileVariable,"Page ",tab(many(&digits)))
+        break
+      }
+
+    }
+  }
+
+  return
+
+end
+
+procedure initializeMarkup()
+
+  # Set variables
+  writes("Name of Input File?> ")
+  inFileName := read()
+  inputFileVariable := open(inFileName,"r") | stop("File not found.")
+  writes("Name of Output File?> ")
+  outputFileVariable := open(read(),"a")
+  initialPageNo()
+  tagCounter := 0
+
+  return
+
+end
+
+procedure procMarkup()
+
+  local line, newline, tagFlag, tagName, pageNo
+
+  writes("Enter the name only of the tag you are seeking. To conclude enter a single period.> ")
+
+  # Read tags
+  while ((tagName := read()) ~== ".") do {
+
+      # Current tag
+      write(outputFileVariable,"\nTag = ", tagName)
+
+      # Look for tag
+      while line := read(inputFileVariable) do {
+
+        line ? {
+
+          # Next page
+          if tab(find("<pb")) then {
+            tab(upto(&digits))
+            pageNo := tab(many(&digits))
+            write(outputFileVariable,"\nPage ",pageNo)
+            &pos := 1
+          }
+
+          # Continue tag
+          if \tagFlag then {
+
+            # End tag
+            if newline := tab(find("</" || tagName || ">")) then {
+              tab(upto('>'))
+              move(1)
+              tagFlag := &null
+              write(outputFileVariable,newline)
+
+            # Continue
+            } else {
+              write(outputFileVariable, line)
+              next
+            }
+          }
+
+          # Next tag
+          every tab(find("<" || tagName || ">")) do {
+
+            write(outputFileVariable,(tagCounter +:= 1))
+
+            # Skip tag
+            move(2 + *tagName)
+
+            tagFlag := "up"
+
+            # Tag ending
+            if newline := tab(find("</" || tagName || ">")) then {
+              tagFlag := &null
+              write(outputFileVariable,newline)
+            } else {
+              write(outputFileVariable,line[&pos:0])
+            }
+
+          }
+
+        }
+
+      }
+
+      # Display data about tag
+      write("Total number of ",tagName," = ",tagCounter,".")
+
+      # Reset counter and close file
+      tagCounter := 0      
+      close(inputFileVariable)
+
+      # Open file again and display message
+      inputFileVariable := open(inFileName,"r")
+      writes("Enter the name only of the tag you are seeking. To conclude enter a single period.> ")
+
+  }
+
+  return
+
+end
+
+procedure finishMarkup()
+
+  # Close files and show message
+  close(inputFileVariable)
+  close(outputFileVariable)
+  write("The output file has been created.")
+  write("Goodbye.")
+
+  return
+
+end
+
+procedure processMarkup()
+  initializeMarkup()
+  procMarkup()
+  finishMarkup()
+  return
+end
+
+procedure initializeStrip()
+
+  # Open files
+  writes("Name of Input File?> ") # 'input.txt'
+  ifv := (open(read(), "r")) | stop("File not found.")
+  writes("Name of Output File?> ")
+  ofv := (open(read(),"w"))
+
+  return
+
+end
+
+procedure skipHeader()
+
+  local line
+
+  (line := read(ifv)) | write("File is empty.")
+
+  # Skip header lines
+  until match("<p>",line) do {
+    line := read(ifv)
+  }
+
+  # Return first line
+  return line
+
+end
+
+procedure strip(l)
+
+  local segment, vowel, nl
+
+  static markers, vowels
+
+  # Initialize sets
+  initial {
+    markers := '<&'
+    vowels := 'aeiouycnAEIOUYCN'
+  }
+
+  nl := ""
+
+  # Scan line
+  l ? {
+
+    # ???
+    while segment := tab(upto(markers)) do {
+
+      # Before markers
+      nl ||:= segment
+
+      # Skip tag
+      if ="<" then {
+        tab(upto('>'))
+        move(1)
+      } else {
+
+        move(1)
+
+        # Replace symbol with vowel or asterisk
+        nl ||:= if vowel := tab(any(vowels)) then vowel else "*"
+
+        tab(upto(';'))
+        move(1)
+
+      }
+
+    }
+
+    nl ||:= tab(0)
+
+  }
+
+  return nl
+
+end
+
+procedure procStrip()
+
+  local line, newline
+
+  line := skipHeader()
+
+  # Strip lines
+  until (match("</body>",line)) do {
+
+    newline := strip(line)
+
+    # Write line to file
+    write(ofv,newline)
+
+    # Read next line
+    line := read(ifv)
+
+  }
+
+  return
+
+end
+
+procedure finishStrip()
+
+  # Close files
+  write("The output file has been created.")
+  close(ifv)
+  close(ofv)
+
+  return
+
+end
+
+procedure processStrip()
+  initializeStrip()
+  procStrip()
+  finishStrip()
+  return
 end
 
 procedure stars()
@@ -1686,10 +1946,16 @@ procedure main()
   # jack(get_started())
 
   # Database
-  database()
+  # database()
 
   # Vocabulary
   # vocabulary()
+
+  # Markup
+  #processMarkup()
+
+  # Strip
+  processStrip()
 
 end
 
