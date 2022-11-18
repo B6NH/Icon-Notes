@@ -1,0 +1,193 @@
+
+# Sample Programs
+
+# Author: Robert J. Alexander with additions by Gregg M. Townsend
+procedure options(arg, optstring, errproc)
+
+  local f, fList, fileArg, fn, ignore, opttable, opttype, p, x, option, optname
+
+  # Initialize.
+  #
+  /optstring := string(&letters)
+  /errproc := stop
+  option := table()
+  fList := []
+  opttable := table()
+
+  # Scan the option specification string.
+  #
+  optstring ? {
+
+    while optname := move(1) do {
+
+      # Skip blank
+      if optname == " " then {
+        next
+      }
+
+      # Long option name
+      if optname == "-" then {
+        optname := tab(many(&letters)) | move(1) | break
+      }
+
+      # Set option type
+      opttype := tab(any('!:+.')) | "!"
+
+      # Save option in table
+      opttable[optname] := opttype
+
+    }
+
+  }
+
+  # Iterate over program invocation argument words.
+  #
+  while x := get(arg) do {
+
+    if /x then {
+      ignore := &null # if end of args from file, stop ignoring
+    } else {
+
+      # Scan argument (first from pair)
+      x ? {
+
+        # If '-' is not at the end and ignore is null
+        if ="-" & not pos(0) & /ignore then {
+
+          # Second '-'
+          if ="-" & pos(0) then {
+            ignore := 1 # ignore following args if --
+          } else {
+
+            # Scan option name
+            tab(0) ? {
+
+              until pos(0) do {
+
+                # Find option name and type
+                if opttype := \opttable[optname := ((pos(1), tab(0)) | move(1))] then {
+
+                  # Save value in table
+                  option[optname] :=
+                    if any(':+.', opttype) then {
+
+                      p := "" ~== tab(0) | get(arg) | return errproc("No parameter following -" || optname)
+
+                      case opttype of {
+                        ":": p
+                        "+": integer(p) | return errproc("-" || optname || " needs numeric parameter")
+                        ".": real(p) | return errproc("-" || optname || " needs numeric parameter")
+                      }
+
+                  # Argument without type
+                  } else {
+                    1
+                  }
+
+                # Option not found
+                } else {
+                  return errproc("Unrecognized option: -" || optname)
+                }
+
+              }
+
+            }
+
+          }
+
+        # If the argument begins with the character "@", fetch option
+        # words from lines of a text file.
+        #
+        } else if ="@" & not pos(0) & /ignore then {
+
+          # Open text file
+          f := open(fn := tab(0)) | return errproc("Can't open " || fn)
+          fileArg := []
+
+          # Collect arguments
+          while put(fileArg, read(f))
+          close(f)
+
+          # Last argument is null
+          push(arg) # push null to signal end of args from file
+
+          # Push other arguments
+          while push(arg, pull(fileArg))
+
+        } else {
+
+          # Different type of argument
+          put(fList, x)
+
+        }
+
+      }
+
+    }
+
+  }
+
+  # Move arguments
+  while push(arg, pull(fList))
+
+  return option
+
+end
+
+procedure showValues(optionsTable)
+  write("S: ",optionsTable["s"])
+  write("B: ",optionsTable["b"])
+  write("P: ",optionsTable["p"])
+  write("Inum: ",optionsTable["inum"])
+  return
+end
+
+procedure checkArgs(arguments)
+
+  if 0 = *arguments then {
+    write("All arguments")
+  }
+
+  return
+
+end
+
+procedure showAndCheck(optionsTable,arguments)
+  showValues(optionsTable)
+  checkArgs(arguments)
+  return
+end
+
+procedure testOptions(arguments,spString)
+
+  local optionsTable
+
+  optionsTable := options(arguments,spString)
+  showAndCheck(optionsTable,arguments)
+  line()
+
+  return
+
+end
+
+procedure line()
+  write(repl("-",50))
+  return
+end
+
+procedure main()
+
+  local spString
+
+  # Set specification string
+  spString := "s:b.p+-inum+"
+
+  line()
+
+  # Command line arguments
+  testOptions(["-s","parstring","-b","5.2","-inum","15","-p","8"],spString)
+
+  # Arguments from file
+  testOptions(["@argfile.txt"],spString)
+
+end

@@ -1,0 +1,8 @@
+-s
+mystring
+-b
+15.5
+-p
+33
+-inum
+99
