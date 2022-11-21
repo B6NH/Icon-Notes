@@ -177,13 +177,30 @@ procedure showAndCheck(optionsTable,arguments)
   return
 end
 
-procedure testOptions(arguments,spString)
+procedure testOpts(arguments,spString)
 
   local optionsTable
 
   optionsTable := options2(arguments,spString)
   showAndCheck(optionsTable,arguments)
   line()
+
+  return
+
+end
+
+procedure testOptions()
+
+  local spString
+
+  # Set specification string
+  spString := "s:b.p+-inum+"
+
+  # Command line arguments
+  testOpts(["-s","parstring","-b","5.2","-inum","15","-p","8"],spString)
+
+  # Arguments from file
+  testOpts(["@argfile.txt"],spString)
 
   return
 
@@ -481,20 +498,31 @@ procedure concordances(arguments)
   local opts, uselist, name, line, pad, i, j, fill
 
   opts := options(arguments, "l+w+") # process options
+
+  # Line length and word width
   colmax := \opts["l"] | ColMax
   namewidth := \opts["w"] | NameWidth
+
+  # Padding
   pad := repl(" ", namewidth)
+
+  # Set global table and line number
   uses := table()
   lineno := 0
 
+  # Process words and save occurrences in table uses
   every tabulate(item(), lineno) # tabulate all citations
 
+  # Sort values by keys
   uselist := sort(uses, 3) # sort by uses
 
+  # Read word (odd index)
   while fill := left(get(uselist), namewidth) do {
 
+    # Read line numbers (even index)
     line := format(get(uselist)) # line numbers
 
+    # Length of line with word and line indices
     while (*line + namewidth) > colmax do { # handle long lines
 
       line ?:= {
@@ -502,20 +530,32 @@ procedure concordances(arguments)
         i := j := 0
 
         every i := upto(' ') do {
+
+          # Index too large
           if i > (colmax - namewidth) then {
             break
+
+          # Update valid index
           } else {
             j := i
           }
+
         }
 
+        # Write part of string
         write(fill, tab(j))
+
         move(1)
+
+        # Set fill and discard already displayed part of string
         fill := pad
         tab(0) # new value of line
+
       }
+
     }
 
+    # Write remaining part of string
     if *line > 0 then {
       write(fill, trim(line))
     }
@@ -538,13 +578,20 @@ procedure format(linenos)
 
   local i, line
 
+  # Sort line numbers
   linenos := sort(linenos, 3)
+
   line := ""
 
+  # Read line number
   while line ||:= get(linenos) do {
+
+    # Append number of occurrences if it is greater than 1
     line ||:= ("(" || (1 < get(linenos)) || ") ") | " "
+
   }
 
+  # Return prepared string
   return line
 
 end
@@ -556,18 +603,26 @@ procedure item()
 
   local i, word, line
 
+  # Read lines
   while line := read() do {
 
+    # Global line number
     lineno +:= 1
+
+    # Show line number and line
     write(right(lineno, 6), " ", line)
+
     line := map(line) # fold to lowercase
+
     i := 1
 
+    # Suspend words
     line ? {
       while tab(upto(&letters)) do {
         word := tab(many(&letters))
-        if *word >= MinLength then # skip short words
-        suspend word
+        if *word >= MinLength then { # skip short words
+          suspend word
+        }
       }
     }
 
@@ -819,24 +874,16 @@ end
 
 procedure main()
 
-  local spString
-
-  # Set specification string
-  spString := "s:b.p+-inum+"
-
   line()
 
-  # Command line arguments
-  testOptions(["-s","parstring","-b","5.2","-inum","15","-p","8"],spString)
-
-  # Arguments from file
-  testOptions(["@argfile.txt"],spString)
+  # Options
+  testOptions()
 
   # Ximage
   testImage()
 
   # Concordances
-  concordances([])
+  concordances(["-l","20","-w","15"])
 
 end
 
