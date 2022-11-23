@@ -4,19 +4,24 @@
 # ---------------------------------------------------------
 
 link options
+link random
 
 $define ColMax 72
 $define MinLength 3
 $define NameWidth 15
 $define Length 78
+$define Limit 1000
 
 global uses, colmax, namewidth, lineno,
-       GameObject, Tree, Learn
+       GameObject, Tree, Learn,
+       defs, ifile, in, limit, prompt, tswitch
 
 # ---------------------------------------------------------
 
 record exrecord(a,b,c,d)
 record Question(question, yes, no)
+record nonterm(name)
+record charset(chars)
 
 # ---------------------------------------------------------
 
@@ -962,6 +967,343 @@ end
 
 # ---------------------------------------------------------
 
+# Author: Ralph E. Griswold
+procedure genSent(arguments)
+
+  local line, plist, s, opts
+
+  # procedures to try on input lines
+  #
+  plist := [define, generate, grammar, source, comment, prompter, error]
+  defs := table() # table of definitions
+  defs["lb"] := [["<"]] # built–in definitions
+  defs["rb"] := [[">"]]
+  defs["vb"] := [["|"]]
+  defs["nl"] := [["\n"]]
+  defs[""] := [[""]]
+  defs["&lcase"] := [[charset(&lcase)]]
+  defs["&ucase"] := [[charset(&ucase)]]
+  defs["&digit"] := [[charset(&digits)]]
+  opts := options(arguments, "tl+s+r")
+  limit := \opts["l"] | Limit
+  tswitch := \opts["t"]
+  &random := \opts["s"]
+
+  if /opts["s"] & /opts["r"] then {
+    randomize()
+  }
+
+  ifile := [&input] # stack of input files
+  prompt := ""
+
+  while in := pop(ifile) do { # process all files
+
+    repeat {
+
+      if *prompt ~= 0 then {
+        writes(prompt)
+      }
+
+      line := read(in) | break
+
+      while line[-1] == "\\" do line := line[1:-1] || read(in) | break
+
+      (!plist)(line)
+    }
+
+    close(in)
+
+  }
+
+end
+
+# Process alternatives.
+#
+procedure alts(defn)
+
+  local alist
+
+  alist := []
+
+  defn ? while put(alist, syms(tab(upto('|') | 0))) do move(1) | break
+
+  return alist
+
+end
+
+# Look for comment.
+#
+procedure comment(line)
+  if line[1] == "#" then {
+    return
+  } else {
+    fail
+  }
+end
+
+# Look for definition.
+#
+procedure define(line)
+  return line ? defs[(="<", tab(find(">::=")))] := (move(4), alts(tab(0)))
+end
+
+# Define nonterminal.
+#
+procedure defnon(sym)
+
+  local chars, name
+
+  if sym ? {
+    ="'" &
+    chars := cset(tab(-1)) &
+    ="'"
+  } then {
+    return charset(chars)
+  } else {
+    return nonterm(sym)
+  }
+
+end
+
+# Note erroneous input line.
+#
+procedure error(line)
+  write("∗∗∗ erroneous line: ", line)
+  return
+end
+
+# Generate sentences.
+#
+procedure gener(goal)
+
+  local pending, symbol
+
+  pending := [nonterm(goal)]
+
+  while symbol := get(pending) do {
+
+    if \tswitch then {
+      write(&errout, symimage(symbol), listimage(pending))
+    }
+
+    case type(symbol) of {
+      "string": writes(symbol)
+      "charset": writes(?symbol.chars)
+      "nonterm": {
+
+        pending := ?\defs[symbol.name] ||| pending | {
+          write(&errout, "∗∗∗ undefined nonterminal: <",symbol.name, ">")
+          break
+        }
+
+        if *pending > \limit then {
+          write(&errout, "∗∗∗ excessive symbols remaining")
+          break
+        }
+      }
+    }
+  }
+
+  write()
+
+end
+
+# Look for generation specification.
+#
+procedure generate(line)
+
+  local goal, count
+
+  if line ? {
+
+    ="<" &
+    goal := tab(upto('>')) \ 1 &
+    move(1) &
+    count := (pos(0) & 1) | integer(tab(0))
+
+  } then {
+
+    every 1 to count do {
+      gener(goal)
+    }
+
+    return
+
+  } else {
+    fail
+  }
+
+end
+
+# Get right hand side of production.
+#
+procedure getrhs(a)
+
+  local rhs
+
+  rhs := ""
+
+  every rhs ||:= listimage(!a) || "|"
+
+  return rhs[1:-1]
+
+end
+
+# Look for request to write out grammar.
+#
+procedure grammar(line)
+
+  local file, out, name
+
+  if line ? {
+
+    name := tab(find("–>")) &
+    move(2) &
+    file := tab(0) &
+    out := if *file = 0 then {
+      &output
+    } else {
+      open(file, "w") | {
+        write(&errout, "∗∗∗ cannot open ", file)
+        fail
+      }
+    }
+  } then {
+
+    (*name = 0) | (name[1] == "<" & name[-1] == ">") | fail
+
+    pwrite(name, out)
+
+    if *file ~= 0 then {
+      close(out)
+    }
+
+    return
+
+  } else {
+    fail
+  }
+
+end
+
+# Produce image of list of grammar symbols.
+#
+procedure listimage(a)
+
+  local s, x
+
+  s := ""
+
+  every x := !a do {
+    s ||:= symimage(x)
+  }
+
+  return s
+
+end
+
+# Look for new prompt symbol.
+#
+procedure prompter(line)
+
+  if line[1] == "=" then {
+    prompt := line[2:0]
+    return
+  }
+
+end
+
+# Write out grammar.
+#
+procedure pwrite(name, ofile)
+
+  local nt, a
+
+  static builtin
+
+  initial builtin := ["lb", "rb", "vb", "nl", "", "&lcase", "&ucase", "&digit"]
+
+  if *name = 0 then {
+
+    a := sort(defs, 3)
+
+    while nt := get(a) do {
+
+      if nt == !builtin then {
+        get(a)
+        next
+      }
+
+      write(ofile, "<", nt, ">::=", getrhs(get(a)))
+
+    }
+
+  } else {
+    write(ofile, name, "::=", getrhs(\defs[name[2:-1]])) |
+    write("∗∗∗ undefined nonterminal: ", name)
+  }
+
+end
+
+# Look for file with input.
+#
+procedure source(line)
+
+  local file, new
+
+  return line ? {
+
+    if ="@" then {
+
+      new := open(file := tab(0)) | {
+        write(&errout, "∗∗∗ cannot open ", file)
+        fail
+      }
+
+      push(ifile, in) & in := new
+
+      return
+
+    }
+
+  }
+
+end
+
+# Produce string image of grammar symbol.
+#
+procedure symimage(x)
+
+  return case type(x) of {
+    "string": x
+    "nonterm": "<" || x.name || ">"
+    "charset": "<'" || x.chars || "'>"
+  }
+
+end
+
+# Process the symbols in an alternative.
+#
+procedure syms(alt)
+
+  local slist
+
+  static nonbrack
+
+  initial nonbrack := ~'<'
+
+  slist := [ ]
+
+  alt ? while {
+    put(slist, tab(many(nonbrack)) | defnon(2(="<", tab(upto('>')), move(1))))
+  }
+
+  return slist
+
+end
+
+# ---------------------------------------------------------
+
 procedure line()
   write(repl("-",50))
   return
@@ -983,7 +1325,10 @@ procedure main()
   # concordances(["-l","20","-w","15"])
 
   # Animal Game
-  animalGame()
+  # animalGame()
+
+  # Generate Sentences
+  genSent([])
 
 end
 
