@@ -1,0 +1,14 @@
+<rule1>::=<qual> <noun> <tverb> <object>;
+<rule2>::=<noun> <iverb>, <clause> ...
+<rule3>::=<qual> <noun> <iverb>.
+<poem>::=<rule1><nl><rule2><nl><rule3><nl><nl>
+<noun>::=he|she|the shadowy figure|the boy|a child|a ghost|a black cat
+<tverb>::=outlines|stares at|captures|damns|destroys|raises|throws
+<iverb>::=alights|hesitates|turns away|kneels|stares|hurries
+<clause>::=and <iverb>|but <iverb>|and <iverb>|while <ger> <adj>
+<adj>::=silently|darkly|with fear|expectantly|fearfully|quietly|hauntingly
+<ger>::=waiting|pointing|breathing|reclining|disappearing
+<object>::=<article> <onoun>
+<article>::=a|the
+<onoun>::=sky|void|abyss|star|darkness|lake|moon|cloud|sun|mountain
+<qual>::=while|as|momentarily|frozen,

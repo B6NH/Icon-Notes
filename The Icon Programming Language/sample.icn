@@ -976,6 +976,8 @@ procedure genSent(arguments)
   #
   plist := [define, generate, grammar, source, comment, prompter, error]
   defs := table() # table of definitions
+
+  # Definitions are lists of lists
   defs["lb"] := [["<"]] # built–in definitions
   defs["rb"] := [[">"]]
   defs["vb"] := [["|"]]
@@ -984,11 +986,14 @@ procedure genSent(arguments)
   defs["&lcase"] := [[charset(&lcase)]]
   defs["&ucase"] := [[charset(&ucase)]]
   defs["&digit"] := [[charset(&digits)]]
+
+  # Table of options
   opts := options(arguments, "tl+s+r")
   limit := \opts["l"] | Limit
   tswitch := \opts["t"]
   &random := \opts["s"]
 
+  # If there are no 's' and 'r' options set value of &random based on date and time
   if /opts["s"] & /opts["r"] then {
     randomize()
   }
@@ -996,21 +1001,31 @@ procedure genSent(arguments)
   ifile := [&input] # stack of input files
   prompt := ""
 
+  # Read one file
   while in := pop(ifile) do { # process all files
 
     repeat {
 
+      # Write prompt if it is not empty string
       if *prompt ~= 0 then {
         writes(prompt)
       }
 
+      # Read line from input
       line := read(in) | break
 
-      while line[-1] == "\\" do line := line[1:-1] || read(in) | break
+      # Line continuation
+      while line[-1] == "\\" do {
+        line := line[1:-1] || read(in) | break
+      }
 
+      # Call procedures with line argument
+      # If procedure fails others are used
       (!plist)(line)
+
     }
 
+    # Close file from stack
     close(in)
 
   }
@@ -1025,8 +1040,14 @@ procedure alts(defn)
 
   alist := []
 
-  defn ? while put(alist, syms(tab(upto('|') | 0))) do move(1) | break
+  # Process parts of definition between '|'
+  defn ? {
+    while put(alist, syms(tab(upto('|') | 0))) do {
+      move(1) | break
+    }
+  }
 
+  # Return processed parts
   return alist
 
 end
@@ -1044,7 +1065,17 @@ end
 # Look for definition.
 #
 procedure define(line)
-  return line ? defs[(="<", tab(find(">::=")))] := (move(4), alts(tab(0)))
+
+  # Scan line and find definition or fail
+  # After failing try procedure generate
+  return line ? {
+
+    # Find grammar assignment
+    # Save definition in table
+    defs[(="<", tab(find(">::=")))] := (move(4), alts(tab(0)))
+
+  }
+
 end
 
 # Define nonterminal.
@@ -1053,14 +1084,22 @@ procedure defnon(sym)
 
   local chars, name
 
+  # Scan between brackets
   if sym ? {
     ="'" &
     chars := cset(tab(-1)) &
     ="'"
   } then {
+
+    # Return charset record with character set
     return charset(chars)
+
   } else {
+
+    # Other definition
+    # Return nonterm record
     return nonterm(sym)
+
   }
 
 end
@@ -1068,8 +1107,12 @@ end
 # Note erroneous input line.
 #
 procedure error(line)
+
+  # Default message for unrecognized line
   write("∗∗∗ erroneous line: ", line)
+
   return
+
 end
 
 # Generate sentences.
@@ -1078,32 +1121,47 @@ procedure gener(goal)
 
   local pending, symbol
 
+  # Put nonterm record with goal in list
   pending := [nonterm(goal)]
 
+  # Take value from list
   while symbol := get(pending) do {
 
+    # Display images of current and remaining objects
     if \tswitch then {
       write(&errout, symimage(symbol), listimage(pending))
     }
 
     case type(symbol) of {
+
+      # Display this string
       "string": writes(symbol)
+
+      # Random character from set
       "charset": writes(?symbol.chars)
+
+      # Defined symbol
       "nonterm": {
 
+        # Add value at the beginning of list
         pending := ?\defs[symbol.name] ||| pending | {
           write(&errout, "∗∗∗ undefined nonterminal: <",symbol.name, ">")
           break
         }
 
+        # Too many symbols
         if *pending > \limit then {
           write(&errout, "∗∗∗ excessive symbols remaining")
           break
         }
+
       }
+
     }
+
   }
 
+  # Newline after generating goal
   write()
 
 end
@@ -1116,6 +1174,7 @@ procedure generate(line)
 
   if line ? {
 
+    # Read type and number of values to generate
     ="<" &
     goal := tab(upto('>')) \ 1 &
     move(1) &
@@ -1123,6 +1182,7 @@ procedure generate(line)
 
   } then {
 
+    # Generate appropriate number of values
     every 1 to count do {
       gener(goal)
     }
@@ -1130,7 +1190,10 @@ procedure generate(line)
     return
 
   } else {
+
+    # Fail and try next procedure - grammar
     fail
+
   }
 
 end
@@ -1157,7 +1220,7 @@ procedure grammar(line)
 
   if line ? {
 
-    name := tab(find("–>")) &
+    name := tab(find("->")) &
     move(2) &
     file := tab(0) &
     out := if *file = 0 then {
@@ -1168,6 +1231,7 @@ procedure grammar(line)
         fail
       }
     }
+
   } then {
 
     (*name = 0) | (name[1] == "<" & name[-1] == ">") | fail
@@ -1206,6 +1270,7 @@ end
 #
 procedure prompter(line)
 
+  # Set new prompter
   if line[1] == "=" then {
     prompt := line[2:0]
     return
@@ -1255,11 +1320,13 @@ procedure source(line)
 
     if ="@" then {
 
+      # Open file with grammar
       new := open(file := tab(0)) | {
         write(&errout, "∗∗∗ cannot open ", file)
         fail
       }
 
+      # Add opened file to list
       push(ifile, in) & in := new
 
       return
@@ -1275,9 +1342,16 @@ end
 procedure symimage(x)
 
   return case type(x) of {
+
+    # Show string
     "string": x
+
+    # Record name
     "nonterm": "<" || x.name || ">"
+
+    # Characters
     "charset": "<'" || x.chars || "'>"
+
   }
 
 end
@@ -1292,13 +1366,26 @@ procedure syms(alt)
 
   initial nonbrack := ~'<'
 
-  slist := [ ]
+  slist := []
 
-  alt ? while {
-    put(slist, tab(many(nonbrack)) | defnon(2(="<", tab(upto('>')), move(1))))
+  # Define words between '<' and '>'
+  alt ? {
+    while put(slist, tab(many(nonbrack)) | defnon(2(="<", tab(upto('>')), move(1))))
   }
 
+  # Return list with records and strings
   return slist
+
+end
+
+procedure generateSentences()
+
+  # Set prompt - '=myPrompt'
+  # Load grammar from file - '@grammar.txt'
+  # Save grammar in file - '->outfile.txt'
+  genSent([])
+
+  return
 
 end
 
@@ -1327,8 +1414,8 @@ procedure main()
   # Animal Game
   # animalGame()
 
-  # Generate Sentences
-  genSent([])
+  # Sentences
+  generateSentences()
 
 end
 
