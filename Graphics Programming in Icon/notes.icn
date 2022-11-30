@@ -1,5 +1,79 @@
 
+link graphics
+
 # Graphics Programming in Icon
 
+procedure graphics()
+
+  local normal
+
+  # Open window with grey background
+  WOpen("size=400,300","bg=light gray")
+
+  # Enable window resizing
+  WAttrib("resize=on")
+
+  # Set colors and line width
+  WAttrib("fg=white","bg=black","linewidth=5") ; Fg("red") ; Bg("black")
+
+  # Show foreground color
+  write("Foreground: ",WAttrib("fg"))
+
+  # Display text
+  WWrite("Hello World!")
+
+  # Draw rectangle
+  DrawRectangle(60, 80, 50, 20)
+
+  # Fill rectangle with background color
+  EraseArea(0,0,40,5)
+
+  # Wait for events
+  WDelay(1000)
+
+  # Process events
+  while *Pending() > 0 do {
+
+    case Event() of {
+
+      &lpress : {
+        until Event() === &lrelease
+        write("Release")
+      }
+
+      "q": exit()
+
+    }
+
+  }
+
+  # Store attributes in list
+  normal := ["bg=white", "fg=blue"]
+
+  # Set attributes using list
+  WAttrib ! normal
+
+  # Blue rectangle
+  FillRectangle(0,0,100,100)
+
+  # Synchronize
+  WSync()
+
+  WDelay(1000)
+
+  # Wait for 'q'
+  # WDone()
+
+end
+
+procedure drawing()
+end
+
+procedure turtle()
+end
+
 procedure main()
+
+  graphics()
+
 end
