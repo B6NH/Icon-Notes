@@ -1,70 +1,176 @@
+# ---------------------------------------------------------
 
 link graphics
 
+# ---------------------------------------------------------
+
 # Graphics Programming in Icon
 
-procedure graphics()
+# ---------------------------------------------------------
 
-  local normal
+# Redefine name
+$define Margin 1
+$ifdef Margin
+  $undef Margin
+  $define Margin 2
+$endif
 
-  # Open window with grey background
-  WOpen("size=400,300","bg=light gray")
+record testr(a,b,c,d)
 
-  # Enable window resizing
-  WAttrib("resize=on")
+# ---------------------------------------------------------
 
-  # Set colors and line width
-  WAttrib("fg=white","bg=black","linewidth=5") ; Fg("red") ; Bg("black")
+procedure greet(name)
+  write("Hi there!")
+  write("My name is ", name, ".")
+  return
+end
 
-  # Show foreground color
-  write("Foreground: ",WAttrib("fg"))
+procedure shuffle(X)
 
-  # Display text
-  WWrite("Hello World!")
+  local i
 
-  # Draw rectangle
-  DrawRectangle(60, 80, 50, 20)
+  every i := *X to 2 by -1 do {
+    X[?i] :=: X[i]
+  }
 
-  # Fill rectangle with background color
-  EraseArea(0,0,40,5)
+  return X
 
-  # Wait for events
-  WDelay(1000)
+end
 
-  # Process events
-  while *Pending() > 0 do {
+procedure icon()
 
-    case Event() of {
+  local lst, r
 
-      &lpress : {
-        until Event() === &lrelease
-        write("Release")
+  # Procedure call
+  greet("George")
+
+  # Argument list
+  lst := [1,2,3,4]
+  write ! lst
+
+  # Show defined value
+  write("Margin: ",Margin)
+
+  # Shuffle record fields
+  r := testr(1,2,3,4)
+  shuffle(r)
+  write("Record: ",r.a,r.b,r.c,r.d)
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure rectangles()
+
+  local width, height, x, y, w, h, colors, rect
+
+  width := 500 ; height := 300
+  colors := ["red", "blue", "green", "yellow", "purple", "white", "black"]
+  rect := [FillRectangle, DrawRectangle]
+
+  write("Event processing started")
+
+  repeat {
+
+    w := ?width
+    h := ?height
+    x := ?width - w / 2
+    y := ?height - h / 2
+
+    # Set random color
+    Fg(?colors)
+
+    # Random rectangle
+    (?rect)(x, y, w, h)
+
+    # Wait for events
+    WDelay(300)
+
+    # Process events
+    while *Pending() > 0 do {
+
+      case Event() of {
+
+        # Hold down left mouse button to pause drawing rectangles
+        &lpress: {
+          until Event() === &lrelease
+          write("Left mouse button released")
+        }
+
+        "q": exit()
+
       }
-
-      "q": exit()
 
     }
 
   }
 
+  write("Event processing complete")
+
+  return
+
+end
+
+procedure graphics()
+
+  local normal
+
+  # Open 400x300 (width x height) pixel window
+  # Background color is light gray
+  WOpen("label=Graphics","size=400,300","bg=light gray")
+
+  # Set colors and line width
+  # Enable window resizing
+  WAttrib("fg=white","bg=black","linewidth=4","resize=on")
+  Fg("red") ; Bg("black")
+
+  # Show foreground color
+  write("Foreground: ",WAttrib("fg"))
+
+  # Display text inside window
+  WWrite("Hello World!")
+
+  # Draw red rectangle
+  DrawRectangle(20,30,200,100)
+
   # Store attributes in list
-  normal := ["bg=white", "fg=blue"]
+  normal := ["bg=white", "fg=orange"]
 
   # Set attributes using list
   WAttrib ! normal
 
   # Blue rectangle
-  FillRectangle(0,0,100,100)
+  FillRectangle(250,40,70,70)
+
+  # Fill rectangle with background color
+  Bg("black")
+  EraseArea(250,40,40,40)
+
+  # Two rectangles
+  Fg("green")
+  DrawRectangle(80,150,60,60,
+                100,160,70,70)
 
   # Synchronize
-  WSync()
+  # WSync()
 
-  WDelay(1000)
+  # Wait 5 seconds
+  WDelay(5000)
+
+  # Rectangles
+  rectangles()
 
   # Wait for 'q'
-  # WDone()
+  write("Press 'q' to quit")
+  WDone()
+
+  return
 
 end
+
+# ---------------------------------------------------------
 
 procedure drawing()
 
@@ -122,14 +228,26 @@ procedure drawing()
   # Press 'q'
   WDone()
 
+  return
+
 end
 
+# ---------------------------------------------------------
+
 procedure turtle()
+
+  return
+
 end
+
+# ---------------------------------------------------------
 
 procedure main()
 
-  # graphics()
-  drawing()
+  # icon()
+  graphics()
+  # drawing()
 
 end
+
+# ---------------------------------------------------------
