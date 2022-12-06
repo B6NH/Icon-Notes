@@ -64,7 +64,7 @@ end
 
 procedure rectangles()
 
-  local width, height, x, y, w, h, colors, rect
+  local width, height, x, y, w, h, colors, rect, brk
 
   width := 500 ; height := 300
   colors := ["red", "blue", "green", "yellow", "purple", "white", "black"]
@@ -72,10 +72,14 @@ procedure rectangles()
 
   write("Event processing started")
 
+  brk := 0
   repeat {
 
+    # Random width and height
     w := ?width
     h := ?height
+
+    # Position
     x := ?width - w / 2
     y := ?height - h / 2
 
@@ -99,11 +103,15 @@ procedure rectangles()
           write("Left mouse button released")
         }
 
-        "q": exit()
+        "q": {
+          brk := 1
+        }
 
       }
 
     }
+
+    if 1 = brk then break
 
   }
 
@@ -172,33 +180,314 @@ end
 
 # ---------------------------------------------------------
 
+procedure sierpinski()
+
+  local width, height, x1, y1, x2, y2, x3, y3, x, y
+
+  width := 400 ; height := 400
+  x1 := 0 ; y1 := height
+  x2 := width / 2 ; y2 := 0
+  x3 := width ; y3 := height
+  x := width / 2 ; y := height / 2
+
+  # Loop until 'q' is pressed
+  until WQuit() do {
+
+    case ?3 of {
+
+      1 : {
+        write("Old ",x," - ",y)
+        x := (x + x1) / 2
+        y := (y + y1) / 2
+        write("New ",x," - ",y)
+      }
+
+      2 : {
+        x := (x + x2) / 2
+        y := (y + y2) / 2
+      }
+
+      3 : {
+        x := (x + x3) / 2
+        y := (y + y3) / 2
+      }
+
+    }
+
+    DrawPoint(x,y)
+
+  }
+
+  return
+
+end
+
+procedure rPolygon(cx,cy,radius,vertices,skips)
+
+  local theta, incr, xprev, yprev, x, y
+
+  # By default don't skip points
+  /skips := 1
+
+  # Current position
+  theta := 0
+
+  # Angle between points
+  incr := skips * 2 * &pi / vertices
+
+  # First point
+  xprev := cx + radius * cos(theta)
+  yprev := cy + radius * sin(theta)
+
+  every 1 to vertices do {
+
+    # Update angle
+    theta +:= incr
+
+    # Next point
+    x := cx + radius * cos(theta)
+    y := cy + radius * sin(theta)
+
+    # Line between points
+    DrawLine(xprev,yprev,x,y)
+
+    # Save last point
+    xprev := x ; yprev := y
+
+  }
+
+  return
+
+end
+
+procedure spokes(cx,cy,radius,n)
+
+  local theta, incr, points
+
+  # Calculate angle
+  theta := 0
+  incr := 2 * &pi / n
+
+  # Collect pairs of points
+  points := []
+  every 1 to n do {
+    put(points,cx,cy)
+    put(points,cx + radius * cos(theta),cy + radius * sin(theta))
+    theta +:= incr
+  }
+
+  # Draw lines
+  DrawSegment ! points
+
+  return
+
+end
+
+procedure checkerboard()
+
+  local size, edge, offset, squares, i, j, sqSize, offEdge, sqEdge
+
+  size := 11 ; edge := 4 ; offset := 170 ; squares := 8
+
+  every i := 0 to squares - 1 do {
+
+    every j := 0 to squares - 1 do {
+
+      # Squares in row
+      if (i + j) % 2 = 1 then {
+        FillRectangle(offset + i * size, offset + j * size, size, size)
+      }
+
+    }
+
+  }
+
+  # Board size
+  sqSize := squares * size
+
+  # Top left
+  offEdge := offset - edge
+
+  # Size with border
+  sqEdge := sqSize + 2 * edge
+
+  # Inner border
+  DrawRectangle(offset,offset,sqSize,sqSize)
+
+  # Outer border
+  DrawRectangle(offEdge,offEdge,sqEdge,sqEdge)
+
+  return
+
+end
+
+procedure triangles()
+
+  local v, leftX, midX, topY, botY, rightX, offset
+
+  # Positions of left and top vertices
+  v := [200,220,240,260]
+  offset := 220
+
+  # Draw triangles
+  every leftX := !v do {
+
+    midX := leftX + 15
+
+    # Column of triangles
+    every topY := !v do {
+
+      botY := topY + 30
+      rightX := leftX + 30
+
+      # Connect points
+      DrawPolygon(midX + offset, topY,
+                  leftX + offset, botY,
+                  rightX + offset, botY)
+
+    }
+
+  }
+
+  return
+
+end
+
+procedure wheel(cx,cy,radius,n,hubradius,tirewidth,rimwidth)
+
+  local i, tireradius
+
+  # Draw spokes and inner circle
+  spokes(cx,cy,radius,n)
+  DrawCircle(cx,cy,radius)
+
+  # Middle circle
+  FillCircle(cx,cy,hubradius)
+
+  # Tire and rim
+  tireradius := radius + rimwidth
+  every i := 0 to tirewidth - 1 do {
+    DrawCircle(cx,cy,tireradius + i)
+  }
+
+  return
+
+end
+
+procedure eggs()
+
+  local x, y, p4
+
+  p4 := &pi / 4
+
+  every y := 70 | 150 do {
+
+    every x := 50 to 350 by 60 do {
+
+      DrawCircle(
+
+        # Bottom
+        x, y, 20, 0.0, &pi,
+
+        # Left part
+        x + 20, y, 40, &pi, p4,
+
+        # Top
+        x, y - 20, 12, 5 * p4, &pi / 2,
+
+        # Right
+        x - 20, y, 40, 7 * p4, p4)
+
+    }
+
+  }
+
+  return
+
+end
+
+procedure aStar(cx,cy,radius,vertices,ecc)
+
+  local acr, x, y, r, kappa, theta, extent
+
+  if ecc < 0.1 then {
+    ecc := 0.1
+  }
+
+  return
+
+end
+
 procedure drawing()
 
-  WOpen("size=400,300")
+  local x, rs
+
+  # Open window
+  WOpen("size=400,400")
 
   # Draw points
-  DrawPoint(10,20,12,22,14,24,16,26)
+  DrawPoint(10,10,20,10,30,10,40,10)
 
-  # Green line
-  Fg("green")
-  DrawLine(10,10,40,40)
+  # Sierpinski triangle
+  # Fg("orange")
+  # sierpinski()
 
-  # Lines between points
-  Fg("red")
-  DrawSegment(50,50,60,60,70,70,80,80)
-
-  # Rectangle
-  DrawRectangle(110,30,50,50)
-
-  # Circle
+  # Purple line
   Fg("purple")
-  DrawCircle(135,55,45)
+  DrawLine(60,10,120,40)
 
-  # Triangle
-  DrawLine(200,50,250,150,300,100,200,50)
+  # Regular red polygon
+  Fg("red")
+  rPolygon(200,80,60,7)
+
+  # Star
+  Fg("blue")
+  rPolygon(330,80,60,7,4)
+
+  # Draw connected lines to form triangle
+  Fg("green")
+  DrawLine(400,30,450,130,500,80,400,30)
+
+  # Lines between pairs of points
+  DrawSegment(10,20,30,50,50,40,30,80)
+
+  # Spokes
+  spokes(80,200,60,20)
+
+  # Rectangle design
+  Fg("blue")
+  every x := 60 to 88 by 4 do {
+    rs := 180 - 2 * x
+    DrawRectangle(x, x, rs, rs)
+  }
+
+  # Normal circle
+  Fg("purple")
+  DrawCircle(560,70,45)
+
+  # Checkerboard
+  checkerboard()
 
   # Filled triangle
-  FillPolygon(300,50,350,150,400,100,300,50)
+  # Polygon is closed automatically
+  Fg("red") ; FillPolygon(290,180,320,260,400,200)
+
+  # Triangles
+  Fg("blue") ; triangles()
+
+  # Even-odd rule
+  Fg("orange") ; FillPolygon(540,200,640,200,590,250,590,150,640,250)
+
+  # Part of circle
+  FillCircle(670,70,45,&pi,&pi/2)
+
+  # Wheel
+  Fg("blue") ; wheel(770,80,50,30,8,5,11)
+
+  # Eggs
+  # eggs()
+
+  WDone()
 
   # Arc
   DrawArc(420,20,50,100,&pi/4,&pi)
@@ -245,8 +534,8 @@ end
 procedure main()
 
   # icon()
-  graphics()
-  # drawing()
+  # graphics()
+  drawing()
 
 end
 
