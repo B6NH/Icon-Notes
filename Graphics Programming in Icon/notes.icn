@@ -380,23 +380,23 @@ procedure eggs()
 
   p4 := &pi / 4
 
-  every y := 70 | 150 do {
+  every y := 180 | 220 do {
 
-    every x := 50 to 350 by 60 do {
+    every x := 675 to 775 by 25 do {
 
       DrawCircle(
 
         # Bottom
-        x, y, 20, 0.0, &pi,
+        x, y, 10, 0.0, &pi,
 
         # Left part
-        x + 20, y, 40, &pi, p4,
+        x + 10, y, 20, &pi, p4,
 
         # Top
-        x, y - 20, 12, 5 * p4, &pi / 2,
+        x, y - 10, 6, 5 * p4, &pi / 2,
 
         # Right
-        x - 20, y, 40, 7 * p4, p4)
+        x - 10, y, 20, 7 * p4, p4)
 
     }
 
@@ -410,9 +410,130 @@ procedure aStar(cx,cy,radius,vertices,ecc)
 
   local acr, x, y, r, kappa, theta, extent
 
+  # Eccentricity
   if ecc < 0.1 then {
     ecc := 0.1
   }
+
+  # Half of angle between points
+  kappa := &pi / vertices
+
+  # Radius to small circle center
+  acr := radius / (ecc * cos(kappa))
+
+  # Vertical
+  x := acr - radius * cos(kappa)
+
+  # Horizontal
+  y := radius * sin(kappa)
+
+  # Calculate radius of small circle
+  r := sqrt(y^2 + x^2) + 0.5
+
+  # Angle of drawn part
+  extent := 2 * atan(y,x)
+
+  # Initial angle
+  theta := &pi / 2
+
+  # Draw part of circles around main circle
+  every 1 to vertices do {
+
+    # Arc center
+    x := cx + acr * cos(theta)
+    y := cy + acr * sin(theta)
+
+    # Draw arc
+    DrawCircle(x,y,r,theta + &pi - extent / 2,extent)
+
+    # New angle
+    theta +:= 2 * kappa
+
+  }
+
+  return
+
+end
+
+procedure arcRect()
+
+  # Rectangle
+  DrawRectangle(535,260,100,50)
+
+  # Top left to right down
+  DrawLine(535,260,635,310)
+
+  # Down left to right up
+  DrawLine(535,310,635,260)
+
+  # Arc inside
+  DrawArc(535,260,100,50,&pi/4,&pi)
+
+  return
+
+end
+
+procedure bali()
+
+  local y, w
+
+  # Clear screen
+  EraseArea()
+
+  # Initial position and line width
+  y := 165 ; w := 1
+
+  every 1 to 9 do {
+
+    # Set line width
+    WAttrib("linewidth=" || w)
+
+    # Draw wave
+    DrawLine(50,y,600,y)
+
+    # Lower lines are thicker
+    y +:= 2 * w + 1
+    w +:= w / 3 + 1
+
+  }
+
+  WAttrib("linewidth=4")
+
+  # Sun
+  DrawCircle(150,140,50,&pi/6,-4*&pi/3)
+
+  return
+
+end
+
+procedure highway()
+
+  EraseArea()
+
+  WAttrib("linewidth=3")
+
+  # Main road
+  Fg("light gray")
+  FillRectangle(0,50,500,160)
+
+  # Black lines on main road
+  Fg("black")
+  DrawLine(0,126,500,126)
+  DrawLine(0,134,500,134)
+
+  # Striped lines on main road
+  WAttrib("linestyle=striped")
+  DrawLine(0,88,500,88)
+  DrawLine(0,172,500,172)
+
+  # Side road that covers part of lines on main road
+  Fg("light gray")
+  FillRectangle(120,50,80,250)
+
+  # Lines on side road
+  Fg("black")
+  WAttrib("linestyle=dashed")
+  DrawLine(160,210,160,300)
 
   return
 
@@ -423,7 +544,7 @@ procedure drawing()
   local x, rs
 
   # Open window
-  WOpen("size=400,400")
+  WOpen("size=920,400")
 
   # Draw points
   DrawPoint(10,10,20,10,30,10,40,10)
@@ -485,12 +606,24 @@ procedure drawing()
   Fg("blue") ; wheel(770,80,50,30,8,5,11)
 
   # Eggs
-  # eggs()
+  eggs()
+
+  # Arched star
+  Fg("purple") ; aStar(850,200,50,8,1.5)
+
+  # Arc inside rectangle
+  arcRect()
+
+  # Smooth curve
+  Fg("red") ; DrawCurve(680,260,780,260,680,310,780,310)
+
+  # Bali
+  # bali()
+
+  # Highway
+  # highway()
 
   WDone()
-
-  # Arc
-  DrawArc(420,20,50,100,&pi/4,&pi)
 
   # Reversible drawing
   WAttrib("drawop=reverse")
