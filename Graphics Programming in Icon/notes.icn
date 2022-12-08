@@ -539,9 +539,108 @@ procedure highway()
 
 end
 
-procedure drawing()
+procedure revDraw()
+
+  local x
+
+  EraseArea()
+
+  DrawLine(50,50,50,150)
+
+  Fg("blue")
+
+  WAttrib("drawop=reverse")
+  every x := 1 to 100 do {
+
+    # Draw rectangle first time
+    FillRectangle(x, 100, 10, 20)
+
+    WDelay(30)
+
+    # Drawing figure twice erases it
+    FillRectangle(x, 100, 10, 20)
+
+  }
+
+  FillRectangle(x, 100, 10, 20)
+
+  # Normal mode
+  WAttrib("drawop=copy")
+
+  return
+
+end
+
+procedure recDes()
 
   local x, rs
+
+  Fg("blue")
+  every x := 60 to 88 by 4 do {
+    rs := 180 - 2 * x
+    DrawRectangle(x, x, rs, rs)
+  }
+
+  return
+
+end
+
+procedure pretzels()
+
+  local x, y
+
+  EraseArea()
+
+  WAttrib("linewidth=4")
+
+  every x := 70 to 670 by 100 do {
+    every y := 60 to 240 by 60 do {
+      WAttrib("dx=" || x, "dy=" || y)
+      DrawCurve(20, -20, -5, 0, 20, 20, 35, 0,0,-20,-35,0,-20,20,5,0,-20,-20)
+    }
+  }
+
+  WAttrib("dx=0","dy=0")
+
+  return
+
+end
+
+procedure clipping()
+
+  local x, y
+
+  EraseArea()
+
+  # Frame and clipped area
+  DrawRectangle(20,20,360,260)
+  Clip(21,21,359,259)
+
+  every 1 to 50 do {
+
+    # Random position
+    x := ?400 ; y := ?400
+
+    # Black line
+    WAttrib("fg=black","linewidth=5")
+    DrawCircle(x,y,30)
+
+    # White line inside
+    WAttrib("fg=white","linewidth=3")
+    DrawCircle(x,y,30)
+
+  }
+
+  # Turn off clipping
+  Clip()
+
+  return
+
+end
+
+procedure drawing()
+
+  local rs
 
   # Open window
   WOpen("size=920,400")
@@ -576,11 +675,7 @@ procedure drawing()
   spokes(80,200,60,20)
 
   # Rectangle design
-  Fg("blue")
-  every x := 60 to 88 by 4 do {
-    rs := 180 - 2 * x
-    DrawRectangle(x, x, rs, rs)
-  }
+  recDes()
 
   # Normal circle
   Fg("purple")
@@ -623,29 +718,24 @@ procedure drawing()
   # Highway
   # highway()
 
-  WDone()
-
   # Reversible drawing
+  # revDraw()
+
+  # Draw rectangle on triangle and restore original mode
   WAttrib("drawop=reverse")
-  every x := 1 to 100 do {
+  FillRectangle(290,200,30,30)
+  WAttrib("drawop=copy")
 
-    # Draw rectangle first time
-    FillRectangle(x, 100, 10, 20)
+  # Translate coordinates
+  WAttrib("dx=20", "dy=300")
+  FillRectangle(0,0,10,10)
+  WAttrib("dx=0", "dy=0")
 
-    WDelay(1)
+  # Pretzels
+  # pretzels()
 
-    # Drawing figure twice erases it
-    FillRectangle(x, 100, 10, 20)
-
-  }
-
-  FillRectangle(x, 100, 10, 20)
-
-  # Set Offset
-  # WAttrib("dx=60", "dy=60")
-
-  # Restrict drawing
-  # Clip(0,0,20,20)
+  # Restrict drawing area
+  # clipping()
 
   # Press 'q'
   WDone()
