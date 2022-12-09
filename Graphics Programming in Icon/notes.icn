@@ -1,6 +1,8 @@
 # ---------------------------------------------------------
 
 link graphics
+link random
+link turtle
 
 # ---------------------------------------------------------
 
@@ -25,7 +27,7 @@ procedure greet(name)
   return
 end
 
-procedure shuffle(X)
+procedure mshuffle(X)
 
   local i
 
@@ -53,7 +55,7 @@ procedure icon()
 
   # Shuffle record fields
   r := testr(1,2,3,4)
-  shuffle(r)
+  mshuffle(r)
   write("Record: ",r.a,r.b,r.c,r.d)
 
   return
@@ -746,7 +748,104 @@ end
 
 # ---------------------------------------------------------
 
+procedure randomWalk()
+
+  every 1 to 9999 do {
+
+    # Move forward
+    TDraw(1)
+
+    # Turn right
+    TRight(?61 - 31)
+
+  }
+
+  return
+
+end
+
+procedure spiralFigure()
+
+  local angle, incr, side
+
+  # Random angle
+  angle := 30 + ?149
+
+  # Side length change
+  incr := sqrt(4 * ?0) + 0.3
+
+  # Initialize side
+  side := 0
+
+  while side < 270 do {
+
+    # Draw line and turn right
+    TDraw(side +:= incr)
+    TRight(angle)
+
+  }
+
+  return
+
+end
+
+procedure bush(n,len)
+
+  # Save current position and direction on stack
+  TSave()
+
+  # Turn right and draw
+  TRight(?71 - 36)
+  TDraw(?len)
+
+  if n > 0 then {
+
+    # Draw lines recursively
+    every 1 to ?4 do {
+      bush(n - 1,len)
+    }
+
+  }
+
+  # Restore position
+  TRestore()
+
+  return
+
+end
+
 procedure turtle()
+
+  local n
+
+  randomize()
+
+  # Turtle random walk
+  # randomWalk()
+
+  # Random figure
+  # spiralFigure()
+
+  TSkip(-120)
+  bush(n := 4 + ?4,300/n)
+
+  WDone()
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure text()
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure color()
 
   return
 
@@ -758,7 +857,8 @@ procedure main()
 
   # icon()
   # graphics()
-  drawing()
+  # drawing()
+  turtle()
 
 end
 
