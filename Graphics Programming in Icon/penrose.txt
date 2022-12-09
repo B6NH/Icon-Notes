@@ -1,0 +1,8 @@
+angle:36
+length:35
+axiom:[X]++[X]++[X]++[X]++[X]
+W->YF++ZF--d--XF[-YF----WF]++
+X->+YF--ZF[---WF--XF]+
+Y->-WF++XF[+++YF++ZF]-
+Z->--YF++++WF[+ZF++++XF]--XF
+F->

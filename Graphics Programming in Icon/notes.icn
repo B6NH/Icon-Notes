@@ -814,6 +814,123 @@ procedure bush(n,len)
 
 end
 
+procedure lsystem()
+
+  local rewrite, line, keyword, value, c, current_string, new_string,
+        axiom, angle, length, gener, f
+
+  # Table with rewrite rules
+  rewrite := table()
+
+  # File with penrose tiling rule
+  f := open("penrose.txt")
+
+  # Read rules and properties from file
+  while line := read(f) do {
+
+    line ? {
+
+      # Rule
+      if c := tab(find("->")) then {
+
+        # Skip arrow
+        move(2)
+
+        # Save rule
+        rewrite[c] := tab(0)
+
+      # Property
+      } else if keyword := tab(find(":")) then {
+
+        # Skip colon
+        move(1)
+
+        # Read value
+        value := tab(0)
+
+        # Save property
+        case keyword of {
+
+          "axiom": {
+            axiom := value
+          }
+
+          "angle": {
+            angle := real(value) | stop("*** invalid line: ", line)
+          }
+
+          "length": {
+            length := integer(value) | stop("*** invalid line: ", line)
+          }
+
+          "gener": {
+            gener := integer(value) | stop("*** invalid line: ", line)
+          }
+
+          default: {
+            stop("*** erroneous keyword: ", line)
+          }
+
+        }
+
+      # Error
+      } else {
+        stop("*** invalid line: ", line)
+      }
+
+    }
+
+  }
+
+  # Close file
+  close(f)
+
+  # Default values
+  /length := 5 ; /gener:= 3
+
+  # Required values
+  if /axiom then stop("*** no axiom specified ")
+  if /angle then stop("*** no angle specified ")
+
+  # Read generated characters
+  every c := lindgen(!axiom, rewrite, gener) do {
+
+    case c of {
+      "F": TDraw(length)
+      "f": TSkip(length)
+      "+": TRight(angle)
+      "-": TLeft(angle)
+      "[": TSave()
+      "]": TRestore()
+    }
+
+  }
+
+  return
+
+end
+
+procedure lindgen(c, rewrite, gener)
+
+  local s
+
+  # Return character in last generation
+  if gener = 0 then {
+
+    return c
+
+  # Recursive call
+  } else if s := \rewrite[c] then {
+
+    suspend lindgen(!s, rewrite, gener - 1)
+
+  # Character without rewrite rule
+  } else {
+    return c
+  }
+
+end
+
 procedure turtle()
 
   local n
@@ -826,8 +943,12 @@ procedure turtle()
   # Random figure
   # spiralFigure()
 
-  TSkip(-120)
-  bush(n := 4 + ?4,300/n)
+  # Tree
+  # TSkip(-120)
+  # bush(n := 4 + ?4,300/n)
+
+  # L-system
+  lsystem()
 
   WDone()
 
