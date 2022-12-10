@@ -958,7 +958,114 @@ end
 
 # ---------------------------------------------------------
 
+procedure ransom(s)
+
+  local c
+  static famlist, attlist
+
+  initial {
+
+    # Attributes
+    attlist := ["", "", "bold", "italic"]
+
+    # Fonts
+    # famlist:= [
+    #   "AvantGarde", "Bookman", "Charter", "Courier", "Gill Sans",
+    #   "Helvetica", "Lucida Bright", "Lucida Sans",
+    #   "New Century Schoolbook", "Palatino", "Rockwell", "Times"
+    # ]
+
+    # Portable fonts
+    famlist:= ["mono","typewriter","sans","serif"]
+
+  }
+
+  # Set font and write letter in window
+  every c := !s do {
+    Font(?famlist || ",24," || ?attlist)
+    WWrites(c)
+  }
+
+  return
+
+end
+
+procedure readLoop()
+
+  repeat {
+
+    WWrites("command? ")
+
+    case WRead() of {
+      "quit": exit()
+      "continue": break
+      "erase": EraseArea()
+    }
+
+  }
+
+  WWrite("Function \'continue\' was selected")
+
+  return
+
+end
+
+procedure flashText()
+
+  WAttrib("drawop=reverse")
+
+  # Wait for key press
+  until *Pending() > 0 do {
+
+    # Show
+    DrawString(10, 10, "Wake up!")
+    WDelay(500)
+
+    # Erase
+    DrawString(10, 10, "Wake up!")
+    WDelay(200)
+
+  }
+
+  return
+
+end
+
 procedure text()
+
+  # New window
+  WOpen("size=400,400")
+
+  # Command line in window
+  # readLoop()
+
+  # Change text position (row and column)
+  GotoRC(5,20)
+  WWrite("Text position changed. Current position: ",
+    WAttrib("row"), " - ", WAttrib("col"))
+
+  # Set exact text position
+  GotoXY(100,200) ; WWrite("100x100")
+
+  # Make cursor visible
+  WAttrib("cursor=on")
+
+  # Letters in random fonts
+  # ransom("The following procedure shows how fonts can be used to produce whimsical output")
+
+  # Show current font
+  write("Current font: ",Font())
+
+  # Width of displayed text
+  write("Width: ",TextWidth("character width multiplied"))
+
+  # Draw string
+  DrawString(300,100,"Hello")
+
+  # Blinking text
+  # flashText()
+
+  WDone()
 
   return
 
@@ -974,12 +1081,21 @@ end
 
 # ---------------------------------------------------------
 
+procedure images()
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
 procedure main()
 
   # icon()
   # graphics()
   # drawing()
-  turtle()
+  # turtle()
+  text()
 
 end
 
