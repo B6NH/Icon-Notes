@@ -1075,6 +1075,39 @@ end
 
 procedure color()
 
+  local cNames, x, i, planes
+
+  WOpen("size=400,400")
+
+  # Color names and numerical specifications
+  cNames := ["pale blue","greenish blue","bluish green","violetish red",
+             "#ffaa05","32000,0,0", "1000,15000,200", "45000,25000,15000",
+             "orangish red"]
+
+  # Colorful rectangles
+  i := 0
+  every x := 100 to 450 by 50 do {
+    Fg(cNames[i+:=1])
+    FillRectangle(x,50,40,80)
+  }
+
+  # Color specification
+  write("RGB: ",ColorValue(cNames[9]))
+  Fg(cNames[9]) ; FillRectangle(100,150,40,40)
+
+  # Gamma parameter
+  write("Gamma correction: ",WAttrib("gamma"))
+
+  # Number of planes supported by graphics hardware
+  planes := WAttrib("depth")
+  write("Planes: ",planes,"(",2^planes," colors)")
+
+  # Define mutable color
+  # mc := NewColor("red")
+  # write("Negative integer: ",mc)
+
+  WDone()
+
   return
 
 end
@@ -1095,7 +1128,8 @@ procedure main()
   # graphics()
   # drawing()
   # turtle()
-  text()
+  # text()
+  color()
 
 end
 
