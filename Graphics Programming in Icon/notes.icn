@@ -1114,7 +1114,133 @@ end
 
 # ---------------------------------------------------------
 
+procedure spheres()
+
+  local sphere, x, y
+
+  # Define shpere
+  sphere := "16,g16,FFFFB98788AEFFFF" ||
+    "FFD865554446AFFF FD856886544339FF E8579BA9643323AF" ||
+    "A569DECA7433215E 7569CDB86433211A 5579AA9643222108" ||
+    "4456776533221007 4444443332210007 4333333222100008" ||
+    "533322221100000A 822222111000003D D41111100000019F" ||
+    "FA200000000018EF FFA4000000028EFF FFFD9532248BFFFF"
+
+  # Random number generator
+  randomize()
+
+  # Columns
+  every x := 20 to 460 by 20 do {
+
+    y := 290
+
+    # Draw column of spheres
+    every 1 to ?17 do {
+      DrawImage(x, y -:= 16, sphere)
+    }
+
+  }
+
+  return
+
+end
+
+procedure necktie()
+
+  local points
+
+  points := [690, 50, 710, 50, 720, 20, 680, 20,
+             690,50,670,280,700,320,730,280,710,50]
+
+  # Set new pattern
+  Pattern("4,#8CA9")
+
+  # Draw polygon
+  WAttrib("fillstyle=textured")
+  FillPolygon ! points
+
+  # Outline
+  WAttrib("fillstyle=solid")
+  DrawPolygon ! points
+
+  return
+
+end
+
 procedure images()
+
+  local code, p, colors, grays, c
+
+  # New window
+  WOpen("size=800,400")
+
+  # Draw spheres
+  spheres()
+
+  # Entry in the pallette that is close to given color
+  code := PaletteKey("g16", "red")
+  write("Close to red in g16: ",code)
+
+  # RGB values
+  write("RGB: ",PaletteColor("g16",code))
+
+  # Characters
+  write("Palette characters: ",PaletteChars("g16"))
+
+  # Small letter 'N'
+  DrawImage(500,50,"5,#1113151911")
+
+  # Set pattern
+  Pattern("grains")
+
+  # Draw only pixels from pattern
+  WAttrib("fillstyle=masked")
+  FillRectangle(500,70,50,50)
+
+  # Draw all pixels
+  Pattern("trellis")
+  WAttrib("fillstyle=textured")
+  FillRectangle(560,70,50,50)
+
+  # Draw necktie with pattern
+  necktie()
+
+  # Create colors list
+  # Collect rgb values for every character in palette
+  p := "g16" ; colors := []
+  every put(colors, PaletteColor(p, !PaletteChars(p)))
+
+  # Omit grays
+  colors := [] ; grays := PaletteGrays(p)
+  every c := !PaletteChars(p) do {
+
+    # Add color if it is not gray
+    if not (grays ? upto(c)) then {
+      put(colors, PaletteColor(p,c))
+    }
+
+  }
+
+  # All colors in palette are grays
+  if 0 = *colors then write("Color list is empty")
+
+  WDone()
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure windows()
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure interaction()
 
   return
 
@@ -1129,7 +1255,10 @@ procedure main()
   # drawing()
   # turtle()
   # text()
-  color()
+  # color()
+  images()
+  # windows()
+  # interaction
 
 end
 
