@@ -1232,7 +1232,122 @@ end
 
 # ---------------------------------------------------------
 
+procedure meltdown()
+
+  local ww, wh, w, x, y, h, yh
+
+  # Window dimensions
+  ww := integer(WAttrib("width"))
+  wh := integer(WAttrib("height"))
+
+  # Loop
+  every 1 to 500 do {
+
+    # Width of copied area
+    w := ?ww
+
+    # Horizontal position
+    x := ?(ww + 2 * w) - w
+
+    # Bottom of copied area
+    y := ?wh
+
+    # Area height
+    h := ?y
+
+    # Vertical position
+    yh := y - h
+
+    # Copy area 1 pixel lower
+    CopyArea(x, yh, w, h, x, yh + 1)
+
+  }
+
+  return
+
+end
+
 procedure windows()
+
+  local alert, win1, win2, win3, win4, win5, win6, choices
+
+  # Open window
+  alert := WOpen("size=300,500") | stop(,"*** cannot open alert window")
+
+  # Draw in window
+  Fg("red") ; FillRectangle(alert,100,100,20,40)
+
+  # Draw in subject
+  FillCircle(&window,150,120,20)
+
+  # Wait
+  # WDelay(1000)
+
+  # Close window
+  WClose()
+
+  # Open 2 windows
+  win1 := WOpen("size=200,100", "fg=red", "font=mono","label=First Canvas")
+  win2 := WOpen("size=350,200", "fg=blue", "font=serif")
+
+  # Window with canvas from win1 and copy of
+  # graphic context from win2 (except font)
+  win3 := Clone(win1, win2, "font=sans")
+
+  # Write in first window
+  WWrite(win1,"Canvas 1") # red
+  WWrite(win3, "A selection of choices follows") # blue
+
+  # Red choices
+  choices := ["one","two","three"]
+  every WWrite(win1," ", !choices)
+
+  # Second window
+  WWrite(win2,"Window 2")
+
+  # Canvas and copy of attributes from win1
+  win4 := Clone(win1,"fg=blue")
+  WWrite(win4,"Window 4")
+
+  # Canvas from win5 and reference to graphics context from win4
+  win5 := WOpen("size=320,200","font=serif")
+  win6 := Couple(win5,win4)
+
+  # Graphics context is modified in win4
+  Fg(win4,"red")
+  WWrite(win6,"Red")
+
+  # The same graphics context
+  Fg(win6,"green")
+  WWrite(win6,"Green")
+
+  # Display canvases and graphics contexts serial numbers and labels
+  write(image(win1)) ; write(image(win2))
+  write(image(win3)) ; write(image(win4))
+  write(image(win5)) ; write(image(win6))
+
+  # Draw in default canvas
+  Fg("purple") ; FillRectangle(200,10,40,40)
+
+  # Set canvas state (hidden, iconic, maximal)
+  # WAttrib("canvas=maximal")
+
+  # Screen dimensions
+  write("Width & Height: ",WAttrib("displaywidth")," ",WAttrib("displayheight"))
+
+  # Copy area to another canvas
+  CopyArea(win1,win2,0,0,100,100,150,50)
+
+  # Copy in the same canvas
+  CopyArea(win2,150,50,100,100,20,40)
+
+  # Generate pixel colors from area
+  # every write(Pixel(0,0,8,8))
+
+  # Image meltdown
+  meltdown()
+
+  WDone()
 
   return
 
@@ -1256,8 +1371,8 @@ procedure main()
   # turtle()
   # text()
   # color()
-  images()
-  # windows()
+  # images()
+  windows()
   # interaction
 
 end
