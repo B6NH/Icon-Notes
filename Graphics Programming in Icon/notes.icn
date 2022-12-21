@@ -1467,7 +1467,129 @@ end
 
 # ---------------------------------------------------------
 
+procedure paint()
+
+  local x, y
+
+  repeat {
+
+    case Event() of {
+
+      # Point
+      &lpress: {
+        DrawPoint(&x, &y)
+        x := &x
+        y := &y
+      }
+
+      # Line
+      &ldrag: {
+        DrawLine(x, y, &x, &y)
+        x := &x
+        y := &y
+      }
+
+      # Erase
+      &rpress | &rdrag: {
+        EraseArea(&x - 2, &y - 2,5,5)
+      }
+
+      "q": exit()
+
+    }
+
+  }
+
+  return
+
+end
+
+procedure showEvents()
+
+  local e
+
+  # Show all events
+  repeat {
+
+    # Read event
+    e := Event()
+
+    # Newline
+    WWrites("\n ")
+
+    # Modifier keys
+    WWrites(if &control then "C" else "_")
+    WWrites(if &shift then "s" else "_")
+    WWrites(if &meta then "m" else "_")
+
+    # Event name, position and time since previous event
+    WWrites(" ", left(image(e), 6), "", left("(" || &x || "," || &y || ")", 11),
+            right(&interval, 6), " msec.")
+
+  }
+
+  return
+
+end
+
+procedure circlePointer()
+
+  local p, x, y, r, px, py
+
+  p := WAttrib("pointer")
+
+  # Circle position
+  x := WAttrib("width") / 2
+  y := WAttrib("height") / 2
+
+  # Radius
+  r := WAttrib("height") / 5
+
+  # Circle
+  DrawCircle(x,y,r)
+
+  until *Pending() > 0 & Event() === "q" do {
+
+    # Read pointer position
+    px := WAttrib("pointerx")
+    py := WAttrib("pointery")
+
+    # Inside
+    if (px - x) ^ 2 + (py - y) ^ 2 < r ^ 2 then {
+      WAttrib("pointer=cross")
+
+    # Outside
+    } else {
+      WAttrib("pointer=" || p)
+    }
+
+    WDelay(10)
+
+  }
+
+  return
+
+end
+
 procedure interaction()
+
+  # Open new window
+  WOpen("size=640,480") | stop("*** cannot open window")
+
+  # Draw on canvas
+  # paint()
+
+  # Show information about events
+  # showEvents()
+
+  # Configure mouse pointer
+  # WAttrib("pointer=watch")
+
+  # Produce dialog
+  # Notice("The file you specified does not exist.")
+
+  # Pointer inside circle
+  circlePointer()
 
   return
 
@@ -1492,8 +1614,8 @@ procedure main()
   # text()
   # color()
   # images()
-  windows()
-  # interaction
+  # windows()
+  interaction()
 
 end
 
