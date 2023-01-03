@@ -1599,6 +1599,39 @@ end
 
 procedure interface()
 
+  # Buttons
+  # Radio buttons
+  # Menus
+  # Text-entry fields
+  # Sliders
+  # Scrollbars
+  # Text lists
+  # Regions
+  # Labels
+  # Lines
+  # Callbacks
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure visual()
+
+  # Planning the Interface
+  # Visual Interface Builder
+  # VIB Menus
+  # VIB Output
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure application()
+
   return
 
 end
@@ -1615,7 +1648,10 @@ procedure main()
   # color()
   # images()
   # windows()
-  interaction()
+  # interaction()
+  # interface()
+  visual()
+  # application
 
 end
 
