@@ -3,6 +3,8 @@
 link graphics
 link random
 link turtle
+link interact
+link vsetup
 
 # ---------------------------------------------------------
 
@@ -18,6 +20,40 @@ $ifdef Margin
 $endif
 
 record testr(a,b,c,d)
+
+# ---------------------------------------------------------
+
+# Interface variables
+global vidgets
+global root
+global pause
+global size
+global half
+global pane
+global colors
+
+# Parameters set from interface
+global delay
+global density
+global draw_proc
+global max_off
+global min_off
+global max_radius
+global min_radius
+global scale_radius
+
+# State information
+global draw_list
+global reset
+global state
+
+# Circle record
+record circle(off1,off2,radius,color)
+
+# Constants
+$define DensityMax 100
+$define SliderMax 10.0
+$define SliderMin 1.0
 
 # ---------------------------------------------------------
 
@@ -1630,7 +1666,299 @@ end
 
 # ---------------------------------------------------------
 
+procedure init()
+  
+  # Random number generator
+  randomize()
+
+  # Create widget table
+  vidgets := ui()
+
+  # Save root widged and width of region usable area
+  root := vidgets["root"]
+  size := vidgets["region"].uw
+
+  # Region must be square
+  if vidgets["region"].uh -= size then stop("*** improper interface layout")
+
+  # Set variables
+  delay := 0
+  density := DensityMax / 2.0
+  max_radius := SliderMax
+  min_radius := SliderMin
+  scale_radius := (size / 4) / SliderMax
+  draw_proc := FillCircle
+
+  # Initialize color palette
+  colors := []
+  every put(colors, PaletteColor("c1", !PaletteChars("c1")))
+
+  # Pause vidget
+  pause := vidgets["pause"]
+
+  # Set vidget states
+  VSetState(vidgets["density"], (density / DensityMax) * SliderMax)
+  VSetState(vidgets["delay"], delay)
+  VSetState(vidgets["min_radius"], min_radius)
+  VSetState(vidgets["max_radius"], max_radius)
+  VSetState(vidgets["shape"], "discs")
+
+  half := size / 2
+
+  # Clone display area to create new graphics context on the same canvas
+  # Set region position and reversible drawing mode
+  pane := Clone("bg=black", "dx=" || (vidgets["region"].ux + half),
+    "dy=" || (vidgets["region"].uy + half), "drawop=reverse")
+
+  # Clip area to prevent drawing outside region
+  Clip(pane, -half, -half, size, size)
+
+  return
+
+end
+
+procedure kaleidoscope()
+
+  # Main loop
+  repeat {
+
+    # Clear display and reset variables
+    EraseArea(pane, -half, -half, size, size)
+    draw_list := []
+    reset := &null
+
+    # Inner loop
+    repeat {
+
+      # Process events or wait
+      while (*Pending() > 0) | \VGetState(pause) do {
+
+        ProcessEvent(root, , shortcuts)
+
+        # Break inner loop to clear display
+        if \reset then break break next
+
+      }
+
+      # Add new circle
+      putcircle()
+
+      # Wait
+      WDelay(delay)
+
+      # Delete oldest circle
+      if *draw_list > density then clrcircle()
+
+    }
+
+  }
+
+end
+
+procedure putcircle()
+
+  local off1, off2, radius, color
+
+  # Random position and radius
+  off1 := ?size % half
+  off2 := ?size % half
+  radius := ((max_radius - min_radius) * ?0 + min_radius) * scale_radius
+  radius <:= 1
+
+  # Select color
+  color := ?colors
+
+  # Add circle to list
+  put(draw_list, circle(off1, off2, radius, color))
+
+  # Draw circle
+  outcircle(off1, off2, radius, color)
+
+  return
+
+end
+
+procedure clrcircle()
+
+  local circle
+
+  # Remove circle from list
+  circle := get(draw_list)
+
+  # Draw circle second time to erase it
+  outcircle(circle.off1, circle.off2, circle.radius, circle.color)
+
+  return
+
+end
+
+procedure outcircle(off1, off2, radius, color)
+
+  # Set foreground color
+  Fg(pane, color)
+
+  # Draw shape using function draw_proc
+  draw_proc(pane, off1 , off2, radius)
+  draw_proc(pane, off1, -off2, radius)
+  draw_proc(pane, -off1, off2, radius)
+  draw_proc(pane, -off1, -off2, radius)
+  draw_proc(pane, off2, off1, radius)
+  draw_proc(pane, off2, -off1, radius)
+  draw_proc(pane, -off2, off1, radius)
+  draw_proc(pane, -off2, -off1, radius)
+
+  return
+
+end
+
+procedure density_cb(vidget, value)
+
+  # Set density
+  density := (value / SliderMax) * DensityMax
+  density <:= 1
+  reset := 1
+
+end
+
+procedure delay_cb(vidget, value)
+
+  # Configure delay
+  delay := value * 200
+
+  return
+
+end
+
+procedure file_cb(vidget, value)
+
+  # File menu
+  case value[1] of {
+    "snapshot @S": snapshot(pane, -half, -half, size, size)
+    "quit @Q" : exit()
+  }
+
+  return
+
+end
+
+procedure max_radius_cb(vidget, value)
+
+  # Set max radius
+  max_radius := value
+
+  # Adjust min radius
+  if max_radius < min_radius then {
+    min_radius := max_radius
+    VSetState(vidgets["min_radius"], min_radius)
+  }
+
+  reset := 1
+
+  return
+
+end
+
+procedure min_radius_cb(vidget, value)
+
+  # Set min radius
+  min_radius := value
+
+  # Adjust max radius
+  if min_radius > max_radius then {
+    max_radius := min_radius
+    VSetState(vidgets["max_radius"],max_radius)
+  }
+
+  reset := 1
+
+  return
+
+end
+
+procedure reset_cb(vidget, value)
+
+  # Enable reset
+  reset := 1
+
+  return
+
+end
+
+procedure shape_cb(vidget, value)
+
+  # Select shape
+  draw_proc := case value of {
+    "discs": FillCircle
+    "rings": DrawCircle
+  }
+
+  reset := 1
+
+  return
+
+end
+
+procedure shortcuts(e)
+
+  # Keyboard shortcuts (alt key)
+  if &meta then {
+    case map(e) of {
+      "q": exit()
+      "s": snapshot(pane, -half, -half, size, size)
+    }
+  }
+    
+  return
+
+end
+
+#===«vib:begin»=== modify using vib; do not remove this marker line
+procedure ui_atts()
+
+  # Create list with window attributes  
+  return ["size=600,455","bg=pale gray","label=kaleido"]
+
+end
+
+procedure ui(win, cbk)
+
+  # Create widgets and assign callbacks
+  return vsetup(win, cbk,
+    [":Sizer:::0,0,600,455:kaleido",],
+    ["delay:Slider:h:1:42,120,100,15:1.0,0.0,0.0",delay_cb],
+    ["density:Slider:h:1:42,180,100,15:0.0,10.0,10.0",density_cb],
+    ["file:Menu:pull::12,3,36,21:File",file_cb,["snapshot @S","quit @Q"]],
+    ["label01:Label:::13,180,21,13:min",],
+    ["label02:Label:::152,180,21,13:max",],
+    ["label03:Label:::13,240,21,13:min" ,],
+    ["label04:Label:::152,240,21,13:max",],
+    ["label05:Label:::13,300,21,13:min",],
+    ["label06:Label:::152,300,21,13:max",],
+    ["label07:Label:::7,120,28,13:slow",],
+    ["label08:Label:::151,120,28,13:fast",],
+    ["lbl_density:Label:::67,160,49,13:density",],
+    ["lbl_max_radius:Label:::43,280,98,13:maximum radius",],
+    ["lbl_min_radius:Label:::44,220,98,13:minimum radius",],
+    ["lbl_speed:Label:::74,100,35,13:speed",],
+    ["line:Line:::0,30,600,30:",],
+    ["max_radius:Slider:h:1:42,300,100,15:0.0,10.0,10.0",max_radius_cb],
+    ["min_radius:Slider:h:1:42,240,100,15:0.0,10.0,1.0",min_radius_cb],
+    ["pause:Button:regular:1:33,55,45,20:pause",],
+    ["reset:Button:regular::111,55,45,20:reset",reset_cb],
+    ["shape:Choice::2:66,359,64,42:",shape_cb,["discs","rings"]],
+    ["region:Rect:raised::188,42,400,400:",],
+    )
+
+end
+#==<<vib:end>>=== end of section maintained by vib
+
 procedure application()
+
+  # Initialize variables
+  init()
+
+  # Run application
+  kaleidoscope()
 
   return
 
@@ -1650,8 +1978,8 @@ procedure main()
   # windows()
   # interaction()
   # interface()
-  visual()
-  # application
+  # visual()
+  application()
 
 end
 
