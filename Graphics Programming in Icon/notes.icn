@@ -1679,7 +1679,9 @@ procedure init()
   size := vidgets["region"].uw
 
   # Region must be square
-  if vidgets["region"].uh -= size then stop("*** improper interface layout")
+  if vidgets["region"].uh ~= size then {
+    stop("*** improper interface layout")
+  }
 
   # Set variables
   delay := 0
@@ -1703,10 +1705,9 @@ procedure init()
   VSetState(vidgets["max_radius"], max_radius)
   VSetState(vidgets["shape"], "discs")
 
-  half := size / 2
-
   # Clone display area to create new graphics context on the same canvas
   # Set region position and reversible drawing mode
+  half := size / 2
   pane := Clone("bg=black", "dx=" || (vidgets["region"].ux + half),
     "dy=" || (vidgets["region"].uy + half), "drawop=reverse")
 
@@ -1736,7 +1737,9 @@ procedure kaleidoscope()
         ProcessEvent(root, , shortcuts)
 
         # Break inner loop to clear display
-        if \reset then break break next
+        if \reset then {
+          break break next
+        }
 
       }
 
@@ -1747,7 +1750,9 @@ procedure kaleidoscope()
       WDelay(delay)
 
       # Delete oldest circle
-      if *draw_list > density then clrcircle()
+      if *draw_list > density then {
+        clrcircle()
+      }
 
     }
 
@@ -1798,7 +1803,7 @@ procedure outcircle(off1, off2, radius, color)
   Fg(pane, color)
 
   # Draw shape using function draw_proc
-  draw_proc(pane, off1 , off2, radius)
+  draw_proc(pane, off1, off2, radius)
   draw_proc(pane, off1, -off2, radius)
   draw_proc(pane, -off1, off2, radius)
   draw_proc(pane, -off1, -off2, radius)
@@ -1966,6 +1971,38 @@ end
 
 # ---------------------------------------------------------
 
+procedure dialog()
+
+  # Dialogs:
+  #  Text
+  #  Selection
+  #  Toggle
+  #  Color
+  #  Custom
+  #  Hidden
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure pattern()
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
+procedure caricature()
+
+  return
+
+end
+
+# ---------------------------------------------------------
+
 procedure main()
 
   # icon()
@@ -1979,7 +2016,8 @@ procedure main()
   # interaction()
   # interface()
   # visual()
-  application()
+  # application()
+  dialog()
 
 end
 
