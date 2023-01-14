@@ -1989,6 +1989,21 @@ end
 
 procedure pattern()
 
+  # Functionality
+  #   Initialize program
+  #   Create menu, regions and buttons
+  #   Process events
+  #   Set bits in pattern
+  #   Make transformations
+  #   Show pattern appearance
+  #   Save and load patterns
+
+  # More features
+  #   Add new transformations
+  #   Revert to the last saved version
+  #   Undo changes
+  #   Symmetric editing
+
   return
 
 end
@@ -1996,6 +2011,23 @@ end
 # ---------------------------------------------------------
 
 procedure caricature()
+
+  # Features
+  #   User interface
+  #   Distortion slider
+  #   Set display mode
+  #   Display image
+  #   Collect points
+  #   Generate and display caricatures
+  #   Load images
+  #   Save and read caricature
+
+  # Other functions
+  #   Adjust datapoints
+  #   Better curve format
+  #   Save caricature as image
+  #   Replace standard face
+  #   More face features
 
   return
 
@@ -2017,7 +2049,9 @@ procedure main()
   # interface()
   # visual()
   # application()
-  dialog()
+  # dialog()
+  # pattern()
+  caricature()
 
 end
 
